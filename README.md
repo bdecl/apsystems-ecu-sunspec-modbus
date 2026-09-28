@@ -59,6 +59,7 @@ is the point of this repository.
 |---|---|
 | [docs/register-map.md](docs/register-map.md) | Every register, its type, a measured value and whether the firmware implements it |
 | [docs/elt-link-issue.md](docs/elt-link-issue.md) | The silent curtailment failure: symptoms, evidence, diagnosis and fix |
+| [docs/official-documentation.md](docs/official-documentation.md) | What the manufacturer's reference covers, where it differs from the device, and links |
 | [scripts/sunspec_walk.py](scripts/sunspec_walk.py) | Walks the model chain and prints what the ECU exposes. Start here |
 | [scripts/sunspec_dump.py](scripts/sunspec_dump.py) | Full register-by-register dump, emits a markdown table |
 | [scripts/ecu_probe.py](scripts/ecu_probe.py) | Scans unit ids and sweeps the address space for undocumented content |
