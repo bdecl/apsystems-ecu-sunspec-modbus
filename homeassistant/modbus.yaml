@@ -221,3 +221,43 @@
     #   device_class: voltage
     #   state_class: measurement
     #   scan_interval: 30
+
+  # ---- Model 123, immediate controls: the two on/off registers ----------
+  #
+  # WARNING: both of these act on the WHOLE ARRAY, not on the inverter whose
+  # unit id they address. Turning "Production" off stops every inverter.
+  #
+  # Polarity per SunSpec: Conn = 1 connects, 0 disconnects. WMaxLim_Ena = 1
+  # enables the curtailment, 0 disables it. Check this against your own
+  # readings before trusting a switch that reports the opposite.
+  #
+  # The percentage setpoint at 40189 is not a switch. Write it with the
+  # modbus.write_register action — see zero_export_example.yaml.
+
+  switches:
+
+    - name: ECU Production Enable
+      unique_id: ecu_production_enable     # 40188, Conn
+      slave: 1
+      address: 40188
+      write_type: holding
+      command_on: 1
+      command_off: 0
+      verify:
+        input_type: holding
+        address: 40188
+        state_on: 1
+        state_off: 0
+
+    - name: ECU Power Limit Enable
+      unique_id: ecu_power_limit_enable    # 40193, WMaxLim_Ena
+      slave: 1
+      address: 40193
+      write_type: holding
+      command_on: 1
+      command_off: 0
+      verify:
+        input_type: holding
+        address: 40193
+        state_on: 1
+        state_off: 0
