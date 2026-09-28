@@ -1,0 +1,190 @@
+# Zero export control for an APsystems ECU over SunSpec Modbus — minimal example.
+#
+# This is a deliberately small reference, not a production controller. It holds
+# grid export near zero by writing a percentage curtailment to register 40189.
+# Adapt the gains and the safety limits to your own site before relying on it.
+#
+# What you need:
+#   - the Modbus hub from modbus.yaml in this repository
+#   - a grid power sensor, positive when importing, negative when exporting.
+#     A Shelly Pro 3EM, a P1 meter or any equivalent will do. The faster it
+#     updates, the tighter the control.
+#
+# Behaviour of the ECU, measured, that shapes the design below:
+#
+#   - The limit is a percentage of the array's rated power, in tenths of a
+#     percent: write 1000 for 100.0 %, 500 for 50.0 %. Scale factor is -1.
+#   - Dispatch to the inverters takes about 20 seconds for a large step.
+#     Do not run the loop faster than the array can actually respond.
+#   - The command is global. It applies to every inverter regardless of the
+#     unit id you address.
+#   - WMaxLim_Ena (40193) must be 1 or the limit is stored and ignored.
+#   - There are no window, revert or ramp registers. Nothing reverts on its
+#     own: if your controller stops, the last limit written stays in force.
+#     That is why the keepalive below rewrites it continuously.
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+input_number:
+  ecu_power_limit_pct:
+    name: ECU power limit
+    min: 0
+    max: 100
+    step: 0.1
+    unit_of_measurement: "%"
+    mode: box
+
+  ecu_array_nominal_w:
+    name: Array rated power
+    min: 0
+    max: 100000
+    step: 100
+    unit_of_measurement: W
+    mode: box          # sum of your inverters' rated AC power
+
+  ecu_export_margin_w:
+    name: Export margin
+    min: 0
+    max: 2000
+    step: 10
+    unit_of_measurement: W
+    mode: box          # aim slightly below zero export; 50-150 W is sensible
+
+input_select:
+  ecu_zero_export:
+    name: ECU zero export mode
+    options:
+      - "Auto"
+      - "Manual"
+
+# ---------------------------------------------------------------------------
+# Automations
+# ---------------------------------------------------------------------------
+
+automation:
+
+  # 1. Keepalive. Rewrites the current setpoint continuously.
+  #
+  # The ECU does not revert a limit on its own, so this is not strictly
+  # required to hold a value. It is here so that an ECU reboot, a dropped
+  # connection or a firmware restart cannot leave the array running at a
+  # stale limit that no longer matches what the controller believes.
+  #
+  # A list value sends function code 16 (write multiple). A scalar sends
+  # function code 6. Both are accepted by this firmware.
+
+  - alias: "ECU - write power limit (keepalive)"
+    id: ecu_write_power_limit
+    mode: single
+    max_exceeded: silent
+    trigger:
+      - platform: time_pattern
+        seconds: "/5"
+    action:
+      - service: modbus.write_register
+        data:
+          hub: APS_ECU
+          slave: 1
+          address: 40189
+          value:
+            - "{{ (states('input_number.ecu_power_limit_pct') | float(100) * 10) | round(0) | int }}"
+
+  # 2. Keep the enable flag set.
+  #
+  # Without this, writes to 40189 are accepted and echoed back but never
+  # applied. This is the single most common reason for "the limit does
+  # nothing" reports.
+
+  - alias: "ECU - keep power limit enabled"
+    id: ecu_keep_limit_enabled
+    mode: single
+    trigger:
+      - platform: time_pattern
+        minutes: "/5"
+      - platform: homeassistant
+        event: start
+    action:
+      - service: modbus.write_register
+        data:
+          hub: APS_ECU
+          slave: 1
+          address: 40193
+          value: 1
+
+  # 3. The controller itself.
+  #
+  # Incremental, with asymmetric gains: it cuts quickly when exporting and
+  # recovers slowly, so a passing cloud or a kettle switching off does not
+  # make the array oscillate. Runs every 10 seconds, which is comfortably
+  # slower than the ECU's ~20 second dispatch.
+
+  - alias: "ECU - zero export controller"
+    id: ecu_zero_export_controller
+    mode: single
+    max_exceeded: silent
+    trigger:
+      - platform: time_pattern
+        seconds: "/10"
+    condition:
+      - condition: state
+        entity_id: input_select.ecu_zero_export
+        state: "Auto"
+    variables:
+      # Replace with your own grid power sensor. Negative = exporting.
+      grid_w: "{{ states('sensor.grid_power') | float(0) }}"
+      margin: "{{ states('input_number.ecu_export_margin_w') | float(100) }}"
+      nominal: "{{ states('input_number.ecu_array_nominal_w') | float(10000) }}"
+      current_pct: "{{ states('input_number.ecu_power_limit_pct') | float(100) }}"
+      # Positive error means we are exporting more than the margin allows.
+      error_w: "{{ (0 - grid_w) - margin }}"
+      # Convert the power error into a percentage of rated power, then apply
+      # a gain: 0.8 going down (react hard), 0.15 going up (recover gently).
+      delta_pct: >
+        {% set raw = error_w / nominal * 100 %}
+        {{ (raw * 0.8) if raw > 0 else (raw * 0.15) }}
+      # Never go below 1 %: 0 % is not the same as stopping, and very low
+      # setpoints leave the inverters near their operating floor.
+      new_pct: "{{ [[current_pct - delta_pct, 1] | max, 100] | min | round(1) }}"
+    action:
+      - condition: template
+        value_template: "{{ (new_pct - current_pct) | abs >= 0.2 }}"
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.ecu_power_limit_pct
+        data:
+          value: "{{ new_pct }}"
+
+  # 4. Release the limit at night.
+  #
+  # Optional but tidy: leaves the array unrestricted so the first light of
+  # the morning is not curtailed by yesterday's last setpoint.
+
+  - alias: "ECU - release limit overnight"
+    id: ecu_release_limit_overnight
+    mode: single
+    trigger:
+      - platform: sun
+        event: sunset
+        offset: "01:00:00"
+    action:
+      - service: input_number.set_value
+        target:
+          entity_id: input_number.ecu_power_limit_pct
+        data:
+          value: 100
+
+# ---------------------------------------------------------------------------
+# Verifying that it works
+# ---------------------------------------------------------------------------
+#
+# Set the mode to Manual, write 1 % and watch measured AC power, not the
+# readback. Production should collapse within about 20 seconds and sit on a
+# stable plateau. If the readback shows 1.0 but power does not move, the
+# command is being accepted and discarded — check that 40193 reads 1, and
+# see the note in this repository about ECUs linked to an ELT storage system
+# in EMA, which silently suppresses dispatch while leaving Conn functional.
+#
+# Pick a setpoint that is actually below current production, or the test
+# proves nothing.

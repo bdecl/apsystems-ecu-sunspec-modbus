@@ -1,0 +1,223 @@
+# Home Assistant Modbus configuration for an APsystems ECU over SunSpec TCP.
+#
+# Tested against an ECU-C, firmware ECU-C-Z_C1.2.26, with QT2-3 inverters.
+# See the register map in this repository for what is and is not implemented.
+#
+# Setup on the ECU side: EMA Manager -> ECU app -> Workspace -> Modbus
+# Configuration. Set Switch to On and give each inverter an address. Those
+# addresses are the Modbus unit ids used below. Port 502 is fixed.
+#
+# Three things worth knowing before you copy this:
+#
+#   1. The controls in model 123 are GLOBAL. Writing to 40188/40189/40193 on
+#      any unit id curtails or disconnects the whole array, not the inverter
+#      you addressed. One control endpoint is enough; declaring several only
+#      invites the mistake of believing they act independently.
+#
+#   2. Use the float model (40124+) for measurements, but the integer model
+#      for operating state and events: St and Evt1 are implemented at 40108
+#      and 40110, and unimplemented at 40170 and 40172.
+#
+#   3. The ECU answers an out-of-range address with silence, not a Modbus
+#      exception. A timeout does not necessarily mean a network problem.
+
+- name: APS_ECU
+  type: tcp
+  host: 192.168.1.131        # your ECU's IP address
+  port: 502
+  timeout: 3
+  retries: 1
+  close_comm_on_error: true
+
+  sensors:
+
+    # ---- Model 1, Common ------------------------------------------------
+    # Identification only. Poll it rarely; it never changes.
+
+    - name: Inverter 1 Model
+      unique_id: inv_1_model
+      slave: 1
+      address: 40020
+      input_type: holding
+      count: 8
+      data_type: string
+      scan_interval: 3600
+
+    - name: Inverter 1 Version
+      unique_id: inv_1_version
+      slave: 1
+      address: 40044
+      input_type: holding
+      count: 4
+      data_type: string
+      scan_interval: 3600
+
+    - name: Inverter 1 Serial Number
+      unique_id: inv_1_serial_number
+      slave: 1
+      address: 40052
+      input_type: holding
+      count: 16
+      data_type: string
+      scan_interval: 3600
+
+    # ---- Model 113, three phase inverter, float -------------------------
+    # Preferred for measurements: no scale factors to apply by hand.
+    # DC values and all temperatures except TmpCab are unimplemented here.
+
+    - name: Inverter 1 AC Current
+      unique_id: inv_1_ac_current
+      slave: 1
+      address: 40124
+      input_type: holding
+      data_type: float32
+      unit_of_measurement: A
+      device_class: current
+      state_class: measurement
+      scan_interval: 10
+
+    - name: Inverter 1 Voltage L1-L2
+      unique_id: inv_1_voltage_l1_l2
+      slave: 1
+      address: 40132
+      input_type: holding
+      data_type: float32
+      unit_of_measurement: V
+      device_class: voltage
+      state_class: measurement
+      scan_interval: 30
+
+    - name: Inverter 1 AC Power
+      unique_id: inv_1_ac_power
+      slave: 1
+      address: 40144
+      input_type: holding
+      data_type: float32
+      unit_of_measurement: W
+      device_class: power
+      state_class: measurement
+      scan_interval: 5
+
+    - name: Inverter 1 Frequency
+      unique_id: inv_1_frequency
+      slave: 1
+      address: 40146
+      input_type: holding
+      data_type: float32
+      unit_of_measurement: Hz
+      device_class: frequency
+      state_class: measurement
+      scan_interval: 30
+
+    - name: Inverter 1 Energy Total
+      unique_id: inv_1_energy_total
+      slave: 1
+      address: 40154
+      input_type: holding
+      data_type: float32
+      unit_of_measurement: Wh
+      device_class: energy
+      state_class: total_increasing
+      scan_interval: 60
+
+    - name: Inverter 1 Cabinet Temperature
+      unique_id: inv_1_cabinet_temperature
+      slave: 1
+      address: 40162
+      input_type: holding
+      data_type: float32
+      unit_of_measurement: °C
+      device_class: temperature
+      state_class: measurement
+      scan_interval: 60
+
+    # ---- Model 103, integer, for status only ----------------------------
+    # St = 4 means MPPT. Evt1 = 0 means no active event.
+
+    - name: Inverter 1 Operating State
+      unique_id: inv_1_operating_state
+      slave: 1
+      address: 40108
+      input_type: holding
+      data_type: uint16
+      scan_interval: 15
+
+    - name: Inverter 1 Event Flags 1
+      unique_id: inv_1_event_flags_1
+      slave: 1
+      address: 40110
+      input_type: holding
+      data_type: uint32
+      scan_interval: 15
+
+    # ---- Model 123, immediate controls: readbacks -----------------------
+    # Only Conn, WMaxLimPct and WMaxLim_Ena are implemented. The window,
+    # revert and ramp registers all read 0xFFFF.
+    #
+    # Read these back. The ECU echoes a written value even when it is not
+    # going to apply it, so a correct readback proves the write arrived,
+    # nothing more. Compare against measured AC power to know it took effect.
+
+    - name: ECU Connect State
+      unique_id: ecu_connect_state          # 40188: 1 = connected, 0 = stopped
+      slave: 1
+      address: 40188
+      input_type: holding
+      data_type: uint16
+      scan_interval: 10
+
+    - name: ECU Power Limit Readback
+      unique_id: ecu_power_limit_readback   # 40189, scale factor -1
+      slave: 1
+      address: 40189
+      input_type: holding
+      data_type: uint16
+      scale: 0.1
+      precision: 1
+      unit_of_measurement: "%"
+      scan_interval: 5
+
+    - name: ECU Power Limit Enable Readback
+      unique_id: ecu_power_limit_enable_readback   # 40193: must be 1
+      slave: 1
+      address: 40193
+      input_type: holding
+      data_type: uint16
+      scan_interval: 10
+
+    - name: ECU Power Limit Scale Factor
+      unique_id: ecu_power_limit_scale_factor      # 40207, reads -1
+      slave: 1
+      address: 40207
+      input_type: holding
+      data_type: int16
+      scan_interval: 3600
+
+    # ---- Model 114, proprietary DC block --------------------------------
+    # Not part of the SunSpec chain: its header sits at 40212, after the
+    # end-of-chain marker at 40210. A conforming client never sees it.
+    # 24 float32 values in three groups of eight, four channels populated.
+    # Group B looks like DC current, group C like DC voltage. Group A is
+    # not yet identified. Uncomment if you want per-panel DC data.
+
+    # - name: Inverter 1 DC Current CH1
+    #   unique_id: inv_1_dc_current_ch1
+    #   slave: 1
+    #   address: 40230
+    #   input_type: holding
+    #   data_type: float32
+    #   unit_of_measurement: A
+    #   device_class: current
+    #   state_class: measurement
+    #   scan_interval: 30
+
+    # - name: Inverter 1 DC Voltage CH1
+    #   unique_id: inv_1_dc_voltage_ch1
+    #   slave: 1
+    #   address: 40246
+    #   input_type: holding
+    #   data_type: float32
+    #   unit_of_measurement: V
+    #   device_class: voltage
+    #   state_class: measurement
+    #   scan_interval: 30
