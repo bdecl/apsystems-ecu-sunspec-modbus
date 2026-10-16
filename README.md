@@ -1,8 +1,8 @@
 # apsystems-ecu-sunspec-modbus
 
 Reverse-engineered SunSpec Modbus map of the APsystems ECU-C, measured register by
-register, with the probe scripts used to obtain it and a working Home Assistant
-configuration for zero export.
+register, with the probe scripts used to obtain it, a Home Assistant integration
+built on those findings, and a zero export blueprint.
 
 Everything here was measured on a real installation, not taken from a datasheet.
 APsystems publishes a short "SunSpec Modbus" document that lists a handful of
@@ -63,10 +63,86 @@ is the point of this repository.
 | [scripts/sunspec_walk.py](scripts/sunspec_walk.py) | Walks the model chain and prints what the ECU exposes. Start here |
 | [scripts/sunspec_dump.py](scripts/sunspec_dump.py) | Full register-by-register dump, emits a markdown table |
 | [scripts/ecu_probe.py](scripts/ecu_probe.py) | Scans unit ids and sweeps the address space for undocumented content |
-| [homeassistant/modbus.yaml](homeassistant/modbus.yaml) | Modbus hub and sensors, documented and ready to adapt |
-| [homeassistant/zero_export_example.yaml](homeassistant/zero_export_example.yaml) | Minimal zero-export controller |
+| [custom_components/apsystems_ecu_sunspec](custom_components/apsystems_ecu_sunspec) | Home Assistant integration, installable through HACS |
+| [blueprints/automation/apsystems_ecu_sunspec/zero_export.yaml](blueprints/automation/apsystems_ecu_sunspec/zero_export.yaml) | Zero export blueprint for the integration |
+| [homeassistant/dashboards/](homeassistant/dashboards/) | Ready-made dashboards, three-phase and single-phase |
+| [homeassistant/modbus.yaml](homeassistant/modbus.yaml) | YAML alternative: Modbus hub and sensors, documented and ready to adapt |
+| [homeassistant/zero_export_example.yaml](homeassistant/zero_export_example.yaml) | YAML alternative: minimal zero-export controller |
 
-## Getting started
+## Home Assistant integration
+
+`apsystems_ecu_sunspec` talks to the ECU's own SunSpec server on port 502. Nothing
+is installed on the ECU. It knows the quirks documented above, so you do not have
+to.
+
+### Install
+
+HACS, three dots, Custom repositories, add this repository as an *Integration*,
+then install **APsystems ECU SunSpec (Modbus)** and restart Home Assistant. Or copy
+`custom_components/apsystems_ecu_sunspec` into your configuration folder.
+
+Then Settings, Devices & services, Add integration, *APsystems ECU SunSpec*. Enter
+the ECU's address. The integration scans the Modbus addresses and shows what it
+found before creating anything:
+
+- the inverters that answer, at whatever addresses you gave them in EMA, gaps
+  included;
+- their model and AC topology, single-, split- or three-phase (models 101/102/103
+  and 111/112/113), per inverter, so a mixed fleet works;
+- the out-of-chain DC block, and how many DC channels each inverter has;
+- which controls of model 123 actually work.
+
+If you add inverters later, use *Reconfigure* on the integration to scan again.
+
+### What you get
+
+One device for the array, one per inverter.
+
+| Device | Entities |
+|---|---|
+| APsystems ECU | Total AC power, total energy, total DC power, inverters producing and online, active events, **power limit** (number), **production** and **power limit enabled** (switches) |
+| APsystems inverter *n* | AC power, current and voltages per phase, frequency, energy, temperature, operating state, events, DC voltage, current and power per channel |
+
+Points the firmware does not implement are not created. Each inverter is read
+from the integer model (it carries state and events, and its energy counter keeps
+full precision), with the float model filling any point the integer one leaves
+empty.
+
+The controls act on **the whole array**, whichever inverter address they are
+written through, and are therefore on the ECU device, not on the inverters.
+Setting a power limit also sets `WMaxLim_Ena` if it was off, since a limit is
+otherwise stored and silently ignored. The integration does not run a control
+loop itself: that is what the blueprint is for.
+
+### Zero export blueprint
+
+[![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fbdecl%2Fapsystems-ecu-sunspec-modbus%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fapsystems_ecu_sunspec%2Fzero_export.yaml)
+
+Inputs: a grid power sensor (either sign convention), the power limit entity,
+the array's rated power, a target grid power, a deadband, separate gains for
+cutting and releasing, a floor, the control period and an optional enable entity
+(a tariff or battery-full condition, for instance). It is incremental, holds the
+last limit when the grid measurement disappears, and puts the array back to
+100 % when the enable entity turns off. Keep the period at 30 s or more: dispatch
+to the inverters takes about 20 s.
+
+### Dashboards
+
+[homeassistant/dashboards/](homeassistant/dashboards/) has a three-phase and a
+single-phase dashboard built from native cards only. Paste one into a dashboard's
+raw configuration editor and copy the per-inverter blocks for each of your
+inverters.
+
+### Limits
+
+- The ECU itself is not visible over Modbus: no ECU serial, no ECU model, and its
+  CT clamps cannot be read. A grid meter has to come from elsewhere.
+- The [bolkedebruin/apsystems-sunspec](https://github.com/bolkedebruin/apsystems-sunspec)
+  adapter (port 1502, installed on the ECU) is detected but not supported yet.
+- Tested against an ECU-C with QT2 inverters and against a simulator built from
+  the register map. Reports from other ECUs and inverters are welcome.
+
+## Getting started with the scripts
 
 Enable SunSpec on the ECU first: EMA Manager, ECU app, Workspace, Modbus
 Configuration. Set Switch to On and give each inverter an address. Those addresses

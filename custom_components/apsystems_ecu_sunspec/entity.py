@@ -1,0 +1,66 @@
+"""Base entities: one device for the ECU (array level), one per inverter."""
+from __future__ import annotations
+
+from typing import Any
+
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import DOMAIN, ECU_DEVICE_NAME, INVERTER_DEVICE_NAME, MANUFACTURER
+from .coordinator import EcuCoordinator
+from .models import UnitLayout
+
+
+def ecu_device(coordinator: EcuCoordinator) -> DeviceInfo:
+    entry = coordinator.config_entry
+    return DeviceInfo(
+        identifiers={(DOMAIN, entry.unique_id)},
+        name=ECU_DEVICE_NAME,
+        manufacturer=MANUFACTURER,
+        model="ECU (SunSpec Modbus)",
+    )
+
+
+class EcuEntity(CoordinatorEntity[EcuCoordinator]):
+    """Array-level entity: totals and the global controls of model 123."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: EcuCoordinator, key: str) -> None:
+        super().__init__(coordinator)
+        self._key = key
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{key}"
+        self._attr_device_info = ecu_device(coordinator)
+
+    @property
+    def values(self) -> dict[str, Any]:
+        return (self.coordinator.data or {}).get("ecu", {})
+
+
+class InverterEntity(CoordinatorEntity[EcuCoordinator]):
+    """Per-inverter entity, attached to the ECU device."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: EcuCoordinator, layout: UnitLayout, key: str) -> None:
+        super().__init__(coordinator)
+        self._key = key
+        self.layout = layout
+        self._attr_unique_id = f"{layout.serial}_{key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, layout.serial)},
+            name=INVERTER_DEVICE_NAME.format(unit=layout.unit),
+            manufacturer=MANUFACTURER,
+            model=layout.model,
+            serial_number=layout.serial,
+            sw_version=layout.version or None,
+            via_device=(DOMAIN, coordinator.config_entry.unique_id),
+        )
+
+    @property
+    def values(self) -> dict[str, Any] | None:
+        return (self.coordinator.data or {}).get("units", {}).get(self.layout.unit)
+
+    @property
+    def available(self) -> bool:
+        return super().available and self.values is not None

@@ -1,0 +1,65 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "ECU APsystems (SunSpec Modbus)",
+        "description": "Activez d'abord SunSpec sur l'ECU (EMA Manager, application ECU, Workspace, Modbus Configuration) et donnez une adresse Modbus à chaque onduleur. L'intégration balaie ensuite les adresses et détecte les onduleurs, leur raccordement AC, le bloc DC et les commandes disponibles.",
+        "data": {
+          "host": "Hôte",
+          "port": "Port",
+          "last_unit": "Adresse Modbus la plus haute à balayer"
+        }
+      },
+      "confirm": {
+        "title": "Installation détectée",
+        "description": "**Onduleurs :** {count} (adresses Modbus {units})\n**Modèles :** {models}\n**Phases AC :** {phases}\n**Canaux DC par onduleur :** {dc} (0 = pas de bloc DC)\n**Commandes fonctionnelles :** {controls}, écrites via l'adresse {control_unit}\n\nLes commandes agissent sur tout le parc, quelle que soit l'adresse utilisée.",
+        "data": {}
+      },
+      "reconfigure": {
+        "title": "Relancer la détection",
+        "description": "Balaie à nouveau l'ECU, par exemple après l'ajout d'onduleurs ou un changement d'adresses dans EMA.",
+        "data": {
+          "host": "Hôte",
+          "port": "Port",
+          "last_unit": "Adresse Modbus la plus haute à balayer"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Aucune réponse sur cet hôte et ce port. Vérifiez l'adresse et que SunSpec est activé dans les réglages de l'ECU.",
+      "no_inverters": "L'ECU répond mais aucun onduleur n'a été trouvé. Vérifiez que les onduleurs ont une adresse Modbus dans les réglages de l'ECU, ainsi que l'adresse la plus haute à balayer.",
+      "adapter_unsupported": "Il s'agit de l'adaptateur bolkedebruin/apsystems-sunspec (en général port 1502), pas du serveur SunSpec propre à l'ECU. Il n'est pas encore pris en charge : utilisez le port 502."
+    },
+    "abort": {
+      "already_configured": "Cet ECU est déjà configuré.",
+      "reconfigure_successful": "Détection mise à jour."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "data": {
+          "scan_interval": "Intervalle d'interrogation (s)",
+          "limit_keepalive": "Réécrire la dernière limite de puissance toutes les (s), 0 = désactivé"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "operating_state": {
+        "state": {
+          "off": "Arrêt",
+          "sleeping": "Veille",
+          "starting": "Démarrage",
+          "mppt": "Production (MPPT)",
+          "throttled": "Bridé",
+          "shutting_down": "Arrêt en cours",
+          "fault": "Défaut",
+          "standby": "Attente"
+        }
+      }
+    }
+  }
+}

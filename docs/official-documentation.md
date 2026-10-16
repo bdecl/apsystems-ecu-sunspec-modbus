@@ -37,7 +37,7 @@ repository, in more complete and more accurate form.
 | Subject | Official document | Measured |
 |---|---|---|
 | Implementation status | Not stated for any field | Roughly half the fields of the inverter models return a not-implemented sentinel, and twenty-one of the twenty-four control registers are inert |
-| DC data block | Given as an address, with no context | It is a model 114 header at 40212, placed *after* the end-of-chain marker at 40210, so a conforming client never reaches it |
+| DC data block | Listed point by point under model 114 (DCV, DCA, DCW per channel) | The header at 40212 sits *after* the end-of-chain marker at 40210, so a conforming client never reaches it |
 | Scope of the controls | Implied per-inverter, since they are addressed by inverter unit id | Global: any write curtails or disconnects the whole array |
 | Status in the float model | Example frames shown for the integer model only | `St` and `Evt1` are unimplemented in model 113, so the float model has no status at all |
 | Meter data | Not mentioned | There is none. No meter model, no reserved unit id, no grid measurement anywhere on Modbus |

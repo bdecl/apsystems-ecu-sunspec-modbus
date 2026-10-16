@@ -1,0 +1,159 @@
+# Dashboard for the apsystems_ecu_sunspec integration, single-phase inverters
+# (DS3, QS1 and similar). Native cards only, no custom card needed.
+#
+# How to use: Settings > Dashboards > Add dashboard, open it, three dots >
+# Edit dashboard > three dots > Raw configuration editor, paste this file.
+#
+# Entity ids assume the default device names ("APsystems ECU" and
+# "APsystems inverter <address>"). If you renamed the devices, search and
+# replace "apsystems_ecu_" and "apsystems_inverter_".
+#
+# The per-inverter part lists addresses 1 and 2: copy the blocks marked
+# "one per inverter" for every address the integration found.
+
+title: Solar
+views:
+  - title: Solar
+    path: solar
+    icon: mdi:solar-power-variant
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Array
+          - type: gauge
+            entity: sensor.apsystems_ecu_power
+            name: Production
+            min: 0
+            max: 8000           # your array's rated power, in W
+            needle: true
+            grid_options:
+              columns: 12
+          - type: tile
+            entity: sensor.apsystems_ecu_energy
+            name: Lifetime energy
+          - type: tile
+            entity: sensor.apsystems_ecu_inverters_producing
+            name: Inverters producing
+          - type: tile
+            entity: sensor.apsystems_ecu_dc_power_total
+            name: DC power
+          - type: tile
+            entity: sensor.apsystems_ecu_events
+            name: Events
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Curtailment
+          - type: tile
+            entity: number.apsystems_ecu_power_limit
+            name: Power limit
+            features:
+              - type: numeric-input
+                style: slider
+            grid_options:
+              columns: 12
+          - type: tile
+            entity: switch.apsystems_ecu_power_limit_enabled
+            name: Limit enabled
+          - type: tile
+            entity: switch.apsystems_ecu_production
+            name: Production
+            # Off stops every inverter of the ECU.
+          - type: markdown
+            content: >-
+              The limit and the production switch act on the **whole array**.
+              Dispatch to the inverters takes about 20 s.
+            grid_options:
+              columns: 12
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Today
+          - type: history-graph
+            title: Production and limit
+            hours_to_show: 24
+            entities:
+              - entity: sensor.apsystems_ecu_power
+                name: Production
+              - entity: number.apsystems_ecu_power_limit
+                name: Limit
+            grid_options:
+              columns: 12
+          - type: statistics-graph
+            title: Daily energy
+            chart_type: bar
+            period: day
+            days_to_show: 14
+            stat_types:
+              - change
+            entities:
+              - entity: sensor.apsystems_ecu_energy
+                name: Energy
+            grid_options:
+              columns: 12
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Inverters
+          # one per inverter --------------------------------------------
+          - type: tile
+            entity: sensor.apsystems_inverter_1_power
+            name: Inverter 1
+          - type: tile
+            entity: sensor.apsystems_inverter_2_power
+            name: Inverter 2
+          # ---------------------------------------------------------------
+          - type: history-graph
+            title: Power per inverter
+            hours_to_show: 24
+            entities:
+              - entity: sensor.apsystems_inverter_1_power   # one per inverter
+              - entity: sensor.apsystems_inverter_2_power
+            grid_options:
+              columns: 12
+
+      # one per inverter ------------------------------------------------------
+      - type: grid
+        cards:
+          - type: heading
+            heading: Inverter 1
+          - type: entities
+            title: AC
+            entities:
+              - entity: sensor.apsystems_inverter_1_operating_state
+                name: State
+              - entity: sensor.apsystems_inverter_1_power
+                name: Power
+              - entity: sensor.apsystems_inverter_1_current
+                name: Current
+              - entity: sensor.apsystems_inverter_1_voltage
+                name: Voltage
+              - entity: sensor.apsystems_inverter_1_frequency
+                name: Frequency
+              - entity: sensor.apsystems_inverter_1_temperature
+                name: Temperature
+              - entity: sensor.apsystems_inverter_1_events
+                name: Events
+            grid_options:
+              columns: 12
+          - type: glance
+            title: DC (panels)
+            columns: 2
+            entities:
+              - entity: sensor.apsystems_inverter_1_dc1_power
+                name: DC1
+              - entity: sensor.apsystems_inverter_1_dc2_power
+                name: DC2
+              - entity: sensor.apsystems_inverter_1_dc1_voltage
+                name: DC1
+              - entity: sensor.apsystems_inverter_1_dc2_voltage
+                name: DC2
+            grid_options:
+              columns: 12
+      # -------------------------------------------------------------------------

@@ -188,35 +188,38 @@ declaring several invites the mistake of believing they act independently.
 
 Placed *after* the end-of-chain marker at 40210, so a conforming SunSpec client
 that walks the chain will never see it. Reachable only by hard-coded address.
-Twenty-four float32 values in three groups of eight, with four channels populated
-and four at zero, matching a four-channel QT2 in an eight-channel layout.
-Captured after sunset; interpretation provisional.
+Twenty-four float32 values in three groups of eight. The manufacturer's "DC Data"
+page names them: group A is DC voltage (DCV1–8), group B DC current (DCA1–8),
+group C DC power (DCW1–8). Four channels are populated and four read zero,
+matching a four-channel QT2 in an eight-channel layout. Captured after sunset.
 
 | Registers | Raw | As float32 | Group |
 |---|---|---|---|
-| 40214–40215 | [16919, 5767] | 37.772 | A, ch1 |
+| 40214–40215 | [16919, 5767] | 37.772 | A (V), ch1 |
 | 40216–40217 | [16919, 5767] | 37.772 | A, ch2 |
 | 40218–40219 | [16919, 5767] | 37.772 | A, ch3 |
 | 40220–40221 | [16919, 5767] | 37.772 | A, ch4 |
 | 40222–40229 | [0, 0] ×4 | 0.0 | A, ch5–8 unused |
-| 40230–40231 | [15551, 45403] | 0.023 | B, ch1 |
+| 40230–40231 | [15551, 45403] | 0.023 | B (A), ch1 |
 | 40232–40233 | [15423, 45403] | 0.012 | B, ch2 |
 | 40234–40235 | [15551, 45403] | 0.023 | B, ch3 |
 | 40236–40237 | [15631, 50437] | 0.035 | B, ch4 |
 | 40238–40245 | [0, 0] ×4 | 0.0 | B, ch5–8 unused |
-| 40246–40247 | [16226, 17654] | 0.884 | C, ch1 |
+| 40246–40247 | [16226, 17654] | 0.884 | C (W), ch1 |
 | 40248–40249 | [16098, 17654] | 0.442 | C, ch2 |
 | 40250–40251 | [16226, 17654] | 0.884 | C, ch3 |
 | 40252–40253 | [16297, 46009] | 1.326 | C, ch4 |
 | 40254–40259 | [0, 0] ×3 | 0.0 | C, ch5–8 unused |
 
-Group B looks like DC current (leakage at night), group C like DC voltage.
-Group A is identical across all four channels and does not match V × I, so it is
-not instantaneous power. To be resolved with a daylight capture.
+The night capture is consistent with that reading: on every channel, A × B ≈ C
+(37.772 V × 0.023 A = 0.87 W against 0.884 W read on channel 1, 37.772 × 0.035 =
+1.32 W against 1.326 W on channel 4). Group A being identical on all four channels
+at night is the open-circuit voltage seen by a single measurement, not per-panel
+data; it should diverge in daylight.
 
 ## Open items
 
-- Do the group A values track irradiance, and do they diverge between channels?
+- Confirm with a daylight capture that the DC voltages diverge between channels.
 - Are `PhVphA/B/C` (40080–40082) permanently zero, or only at night? Line-to-line
   voltages read correctly at 419 V.
 - Extend the probe to 40270 to find the real terminator of model 114.

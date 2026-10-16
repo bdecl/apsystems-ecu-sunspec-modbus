@@ -1,0 +1,202 @@
+blueprint:
+  name: APsystems ECU - zero export
+  description: >-
+    Holds grid power near a target by adjusting the power limit of an APsystems
+    ECU (integration apsystems_ecu_sunspec). Incremental controller with
+    asymmetric gains: it cuts quickly when exporting and recovers gently, so a
+    passing cloud or a kettle switching off does not make the array oscillate.
+
+
+    The ECU needs about 20 seconds to dispatch a large step to the inverters.
+    Keep the control period at 30 seconds or more. When the optional enable
+    entity is off, the limit is put back to 100 %.
+  domain: automation
+  source_url: https://github.com/bdecl/apsystems-ecu-sunspec-modbus/blob/main/blueprints/automation/apsystems_ecu_sunspec/zero_export.yaml
+  input:
+    grid_power:
+      name: Grid power sensor
+      description: Power at the grid connection, in W. Faster sensors give tighter control.
+      selector:
+        entity:
+          filter:
+            - domain: sensor
+              device_class: power
+    import_positive:
+      name: Positive means import
+      description: On if the sensor is positive when importing and negative when exporting.
+      default: true
+      selector:
+        boolean:
+    power_limit:
+      name: ECU power limit
+      selector:
+        entity:
+          filter:
+            - integration: apsystems_ecu_sunspec
+              domain: number
+    array_power:
+      name: Array rated power
+      description: Sum of the inverters' rated AC power. The limit is a percentage of it.
+      selector:
+        number:
+          min: 100
+          max: 200000
+          step: 100
+          unit_of_measurement: W
+          mode: box
+    target:
+      name: Target grid power
+      description: >-
+        Grid power the controller aims for. A small positive value (some import)
+        keeps the array from exporting during fast load drops.
+      default: 50
+      selector:
+        number:
+          min: -5000
+          max: 5000
+          step: 10
+          unit_of_measurement: W
+          mode: box
+    deadband:
+      name: Deadband
+      description: No correction while the error stays within this band.
+      default: 50
+      selector:
+        number:
+          min: 0
+          max: 2000
+          step: 10
+          unit_of_measurement: W
+          mode: box
+    gain_down:
+      name: Gain when cutting
+      default: 0.8
+      selector:
+        number:
+          min: 0.05
+          max: 1
+          step: 0.05
+          mode: slider
+    gain_up:
+      name: Gain when releasing
+      default: 0.15
+      selector:
+        number:
+          min: 0.05
+          max: 1
+          step: 0.05
+          mode: slider
+    min_limit:
+      name: Lowest limit
+      description: >-
+        Never curtail below this. 0 % is not "off" on the ECU, and very low
+        values leave the inverters at their operating floor.
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 0.1
+          unit_of_measurement: "%"
+          mode: box
+    period:
+      name: Control period
+      default: 30
+      selector:
+        number:
+          min: 10
+          max: 600
+          step: 5
+          unit_of_measurement: s
+          mode: box
+    enable_entity:
+      name: Enable (optional)
+      description: >-
+        Input boolean or binary sensor that allows curtailment, e.g. a tariff
+        or battery-full condition. Leave empty to run all the time.
+      default:
+      selector:
+        entity:
+          filter:
+            - domain:
+                - input_boolean
+                - binary_sensor
+                - switch
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - platform: time_pattern
+    seconds: "/10"
+
+variables:
+  grid_entity: !input grid_power
+  import_positive: !input import_positive
+  limit_entity: !input power_limit
+  array_power: !input array_power
+  target: !input target
+  deadband: !input deadband
+  gain_down: !input gain_down
+  gain_up: !input gain_up
+  min_limit: !input min_limit
+  period: !input period
+  enable_entity: !input enable_entity
+
+condition:
+  # Pace the loop: runs at most once per control period.
+  - condition: template
+    value_template: >-
+      {{ this.attributes.last_triggered is none
+         or (now() - this.attributes.last_triggered).total_seconds() >= (period | float(30)) - 2 }}
+  - condition: template
+    value_template: "{{ has_value(limit_entity) }}"
+
+action:
+  - variables:
+      enabled: >-
+        {{ not enable_entity or is_state(enable_entity, 'on') }}
+      current: "{{ states(limit_entity) | float(100) }}"
+  - choose:
+      # Not allowed to curtail: give the array back its full output, once.
+      - conditions:
+          - condition: template
+            value_template: "{{ not enabled }}"
+        sequence:
+          - if:
+              - condition: template
+                value_template: "{{ current < 100 }}"
+            then:
+              - service: number.set_value
+                target:
+                  entity_id: "{{ limit_entity }}"
+                data:
+                  value: 100
+      # Grid measurement missing: hold the last limit rather than guess.
+      - conditions:
+          - condition: template
+            value_template: "{{ enabled and has_value(grid_entity) }}"
+        sequence:
+          - variables:
+              grid: >-
+                {% set g = states(grid_entity) | float(0) %}
+                {{ g if import_positive else -g }}
+              # > 0: grid is below target (exporting), cut. < 0: release.
+              excess: "{{ target - grid }}"
+              new_limit: >-
+                {% if excess | abs <= deadband %}
+                  {{ current }}
+                {% else %}
+                  {% set step = excess / array_power * 100 %}
+                  {% set gain = gain_down if excess > 0 else gain_up %}
+                  {{ [[current - step * gain, min_limit] | max, 100] | min | round(1) }}
+                {% endif %}
+          - if:
+              - condition: template
+                value_template: "{{ (new_limit | float - current) | abs >= 0.1 }}"
+            then:
+              - service: number.set_value
+                target:
+                  entity_id: "{{ limit_entity }}"
+                data:
+                  value: "{{ new_limit }}"

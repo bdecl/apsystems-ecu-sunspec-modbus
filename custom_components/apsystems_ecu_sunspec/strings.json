@@ -1,0 +1,65 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "APsystems ECU (SunSpec Modbus)",
+        "description": "Enable SunSpec on the ECU first (EMA Manager, ECU app, Workspace, Modbus Configuration) and give every inverter a Modbus address. The integration then scans the addresses and detects the inverters, their AC topology, the DC block and the available controls.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "last_unit": "Highest Modbus address to scan"
+        }
+      },
+      "confirm": {
+        "title": "Detected installation",
+        "description": "**Inverters:** {count} (Modbus addresses {units})\n**Models:** {models}\n**AC phases:** {phases}\n**DC channels per inverter:** {dc} (0 = no DC block)\n**Working controls:** {controls}, written through address {control_unit}\n\nThe controls act on the whole array, whatever the address used.",
+        "data": {}
+      },
+      "reconfigure": {
+        "title": "Detect again",
+        "description": "Scans the ECU again, for example after adding inverters or changing their addresses in EMA.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "last_unit": "Highest Modbus address to scan"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "No answer on this host and port. Check the address and that SunSpec is switched on in the ECU settings.",
+      "no_inverters": "The ECU answers but no inverter was found. Check that the inverters have Modbus addresses in the ECU settings, and the highest address to scan.",
+      "adapter_unsupported": "This is the bolkedebruin/apsystems-sunspec adapter (usually port 1502), not the ECU's own SunSpec server. It is not supported yet: use port 502."
+    },
+    "abort": {
+      "already_configured": "This ECU is already configured.",
+      "reconfigure_successful": "Detection updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "data": {
+          "scan_interval": "Polling interval (s)",
+          "limit_keepalive": "Rewrite the last power limit every (s), 0 = off"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "operating_state": {
+        "state": {
+          "off": "Off",
+          "sleeping": "Sleeping",
+          "starting": "Starting",
+          "mppt": "Producing (MPPT)",
+          "throttled": "Throttled",
+          "shutting_down": "Shutting down",
+          "fault": "Fault",
+          "standby": "Standby"
+        }
+      }
+    }
+  }
+}
