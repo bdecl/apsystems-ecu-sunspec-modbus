@@ -116,7 +116,14 @@ loop itself: that is what the blueprint is for.
 
 ### Zero export blueprint
 
-[![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fbdecl%2Fapsystems-ecu-sunspec-modbus%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fapsystems_ecu_sunspec%2Fzero_export.yaml)
+[![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2Fbdecl%2Fapsystems-ecu-sunspec-modbus%2Fmain%2Fblueprints%2Fautomation%2Fapsystems_ecu_sunspec%2Fzero_export.yaml)
+
+Or, in Home Assistant: Settings, Automations & scenes, Blueprints, Import
+blueprint, and paste the raw file address:
+
+```
+https://raw.githubusercontent.com/bdecl/apsystems-ecu-sunspec-modbus/main/blueprints/automation/apsystems_ecu_sunspec/zero_export.yaml
+```
 
 Inputs: a grid power sensor (either sign convention), the power limit entity,
 the array's rated power, a target grid power, a deadband, separate gains for

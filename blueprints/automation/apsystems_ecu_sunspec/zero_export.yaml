@@ -11,7 +11,7 @@ blueprint:
     Keep the control period at 30 seconds or more. When the optional enable
     entity is off, the limit is put back to 100 %.
   domain: automation
-  source_url: https://github.com/bdecl/apsystems-ecu-sunspec-modbus/blob/main/blueprints/automation/apsystems_ecu_sunspec/zero_export.yaml
+  source_url: https://raw.githubusercontent.com/bdecl/apsystems-ecu-sunspec-modbus/main/blueprints/automation/apsystems_ecu_sunspec/zero_export.yaml
   input:
     grid_power:
       name: Grid power sensor
