@@ -13,14 +13,13 @@ type EcuConfigEntry = ConfigEntry[EcuCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EcuConfigEntry) -> bool:
-    hub = EcuHub(entry.data[CONF_HOST], entry.data[CONF_PORT], timeout=READ_TIMEOUT)
+    # Units are released by the modbus integration when the entry unloads.
+    hub = EcuHub.for_entry(
+        hass, entry, entry.data[CONF_HOST], entry.data[CONF_PORT], READ_TIMEOUT
+    )
     scan = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     coordinator = EcuCoordinator(hass, entry, hub, scan)
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except Exception:
-        await hub.close()
-        raise
+    await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     coordinator.start_keepalive()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -36,5 +35,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: EcuConfigEntry) -> bool
     ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if ok:
         entry.runtime_data.stop_keepalive()
-        await entry.runtime_data.hub.close()
     return ok

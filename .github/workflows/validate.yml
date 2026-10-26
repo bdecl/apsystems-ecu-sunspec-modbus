@@ -26,8 +26,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
-      - run: pip install pymodbus pytest
+          python-version: "3.14"
+      - run: pip install pytest
       - run: pytest -q -p no:cacheprovider tests
 
   tests-ha:
@@ -36,6 +36,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
-      - run: pip install pytest-homeassistant-custom-component pymodbus
+          python-version: "3.14"
+      # Oldest supported Home Assistant (2026.10.0) and the requirements of its
+      # modbus integration, which the test harness does not install by itself.
+      - run: >-
+          pip install pytest-homeassistant-custom-component==0.13.371
+          "modbus-connection[tmodbus]==4.12.3" tmodbus==0.6.2 pymodbus==3.13.1
       - run: cd tests_ha && pytest -q --rootdir=. .

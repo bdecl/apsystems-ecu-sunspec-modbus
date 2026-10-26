@@ -3,11 +3,12 @@
   "name": "APsystems ECU SunSpec (Modbus)",
   "codeowners": ["@bdecl"],
   "config_flow": true,
+  "dependencies": ["modbus"],
   "documentation": "https://github.com/bdecl/apsystems-ecu-sunspec-modbus",
   "integration_type": "hub",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/bdecl/apsystems-ecu-sunspec-modbus/issues",
-  "loggers": ["custom_components.apsystems_ecu_sunspec", "pymodbus"],
-  "requirements": ["pymodbus>=3.6.0"],
-  "version": "0.1.0"
+  "loggers": ["custom_components.apsystems_ecu_sunspec", "modbus_connection", "tmodbus"],
+  "requirements": [],
+  "version": "0.2.0"
 }

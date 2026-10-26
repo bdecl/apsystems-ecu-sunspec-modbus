@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import selector
 
 from .const import (
@@ -52,9 +52,13 @@ def _host_schema(defaults: dict[str, Any]) -> vol.Schema:
     )
 
 
-async def _run_detection(user_input: dict[str, Any]) -> tuple[Detection | None, str | None]:
+async def _run_detection(
+    hass: HomeAssistant, user_input: dict[str, Any]
+) -> tuple[Detection | None, str | None]:
     try:
-        found = await detect(user_input[CONF_HOST], user_input[CONF_PORT], user_input[CONF_LAST_UNIT])
+        found = await detect(
+            hass, user_input[CONF_HOST], user_input[CONF_PORT], user_input[CONF_LAST_UNIT]
+        )
     except HubError:
         return None, "cannot_connect"
     if found.adapter:
@@ -106,7 +110,7 @@ class EcuConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             user_input = _normalise(user_input)
-            found, error = await _run_detection(user_input)
+            found, error = await _run_detection(self.hass, user_input)
             if error:
                 errors["base"] = error
             else:
@@ -138,7 +142,7 @@ class EcuConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             user_input = _normalise(user_input)
-            found, error = await _run_detection(user_input)
+            found, error = await _run_detection(self.hass, user_input)
             if error:
                 errors["base"] = error
             else:

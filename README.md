@@ -3,7 +3,7 @@
 [![GitHub release](https://img.shields.io/github/v/release/bdecl/apsystems-ecu-sunspec-modbus)](https://github.com/bdecl/apsystems-ecu-sunspec-modbus/releases)
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz)
 [![Validate](https://github.com/bdecl/apsystems-ecu-sunspec-modbus/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/bdecl/apsystems-ecu-sunspec-modbus/actions/workflows/validate.yml)
-[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.12%2B-18BCF2?logo=homeassistant&logoColor=white)](https://www.home-assistant.io)
+[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2026.10%2B-18BCF2?logo=homeassistant&logoColor=white)](https://www.home-assistant.io)
 [![Installs](https://img.shields.io/badge/dynamic/json?color=41BDF5&logo=home-assistant&label=installs&cacheSeconds=15600&url=https://analytics.home-assistant.io/custom_integrations.json&query=$.apsystems_ecu_sunspec.total)](https://analytics.home-assistant.io/)
 [![License: MIT](https://img.shields.io/github/license/bdecl/apsystems-ecu-sunspec-modbus)](LICENSE)
 
@@ -89,6 +89,14 @@ to.
 HACS, three dots, Custom repositories, add this repository as an *Integration*,
 then install **APsystems ECU SunSpec (Modbus)** and restart Home Assistant. Or copy
 `custom_components/apsystems_ecu_sunspec` into your configuration folder.
+
+Home Assistant 2026.10 or newer is required. The integration takes its Modbus
+connection from Home Assistant's own `modbus` integration rather than opening its
+own socket: every integration that addresses the same host and port shares one
+connection, and their requests queue instead of competing. A second Modbus client
+has been reported to make an ECU stop answering, so that matters. A `modbus:`
+hub declared in YAML still opens a separate connection: do not point one at the
+ECU while the integration is in use.
 
 [![Add integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=apsystems_ecu_sunspec)
 

@@ -8,7 +8,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import logging
 
-from .hub import EcuHub, HubError, IllegalAddress
+from homeassistant.core import HomeAssistant
+
+from .hub import EcuHub, HubConnectError, HubError, IllegalAddress
 from .models import (
     ADAPTER_MODELS,
     BASE,
@@ -121,16 +123,22 @@ async def _identify(hub: EcuHub, unit: int) -> tuple[UnitLayout, list[int]]:
     return layout, ids
 
 
-async def detect(host: str, port: int, last_unit: int, timeout: float = SCAN_TIMEOUT) -> Detection:
-    hub = EcuHub(host, port, timeout=timeout)
+async def detect(
+    hass: HomeAssistant, host: str, port: int, last_unit: int, timeout: float = SCAN_TIMEOUT
+) -> Detection:
+    """Scan units 1..last_unit. Raises HubConnectError if nothing listens."""
     result = Detection()
-    try:
-        await hub.connect()  # HubError here means nothing listens on host:port
+    async with EcuHub.temporary(hass, host, port, timeout) as hub:
         misses = 0
         for unit in range(1, last_unit + 1):
             try:
                 marker = await hub.read(unit, BASE, 2)
-            except (HubError, IllegalAddress):
+            except HubConnectError:
+                raise
+            except (HubError, IllegalAddress) as err:
+                if not hub.connected:
+                    # The link itself never came up: nothing listens there.
+                    raise HubConnectError(str(err)) from err
                 misses += 1
                 if result.units and misses >= MAX_MISSES:
                     break
@@ -141,6 +149,8 @@ async def detect(host: str, port: int, last_unit: int, timeout: float = SCAN_TIM
                 continue
             try:
                 layout, ids = await _identify(hub, unit)
+            except HubConnectError:
+                raise
             except (HubError, IllegalAddress, NotSunSpec) as err:
                 _LOGGER.warning("Unit %s skipped: %s", unit, err)
                 continue
@@ -165,6 +175,4 @@ async def detect(host: str, port: int, last_unit: int, timeout: float = SCAN_TIM
                 "limit_enabled": c["limit_enabled"] is not None,
             }
             break
-    finally:
-        await hub.close()
     return result

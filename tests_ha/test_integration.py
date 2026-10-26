@@ -192,3 +192,29 @@ async def test_falls_back_to_short_reads(hass: HomeAssistant, ecu_factory):
     entry, _ = await _setup(hass, port, last_unit=2)
     assert float(_state(hass, "sensor.apsystems_inverter_1_power")) == 2100
     assert entry.runtime_data.split_reads == {1}
+
+
+async def test_uses_shared_connection(hass: HomeAssistant, ecu_factory):
+    """The entry holds its units on the modbus integration's shared link, the
+    scan's temporary hold is gone, and unloading closes the link."""
+    from homeassistant.components.modbus.connection import async_get_connection_info
+
+    ecu, port = await ecu_factory({
+        1: build_unit("9015000X0001"),
+        2: build_unit("9015000X0002"),
+    })
+    entry, _ = await _setup(hass, port)
+    info = async_get_connection_info(hass)
+    assert len(info) == 1
+    assert info[0].endpoint == ("tcp", "127.0.0.1", port)
+    assert info[0].units == {entry.entry_id: [1, 2]}
+
+    # A second scan while the entry is loaded rides on the same link. It gets
+    # as far as reading the serials, which is how it knows the ECU is known.
+    r = await _start(hass, port, 2)
+    assert r["type"] is FlowResultType.ABORT and r["reason"] == "already_configured", r
+    assert len(async_get_connection_info(hass)) == 1
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert async_get_connection_info(hass) == []
