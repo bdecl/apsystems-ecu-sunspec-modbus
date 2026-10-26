@@ -1,5 +1,11 @@
 # apsystems-ecu-sunspec-modbus
 
+[![GitHub release](https://img.shields.io/github/v/release/bdecl/apsystems-ecu-sunspec-modbus)](https://github.com/bdecl/apsystems-ecu-sunspec-modbus/releases)
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz)
+[![Validate](https://github.com/bdecl/apsystems-ecu-sunspec-modbus/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/bdecl/apsystems-ecu-sunspec-modbus/actions/workflows/validate.yml)
+[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.12%2B-18BCF2?logo=homeassistant&logoColor=white)](https://www.home-assistant.io)
+[![License: MIT](https://img.shields.io/github/license/bdecl/apsystems-ecu-sunspec-modbus)](LICENSE)
+
 Reverse-engineered SunSpec Modbus map of the APsystems ECU-C, measured register by
 register, with the probe scripts used to obtain it, a Home Assistant integration
 built on those findings, and a zero export blueprint.
@@ -77,9 +83,13 @@ to.
 
 ### Install
 
+[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=bdecl&repository=apsystems-ecu-sunspec-modbus&category=integration)
+
 HACS, three dots, Custom repositories, add this repository as an *Integration*,
 then install **APsystems ECU SunSpec (Modbus)** and restart Home Assistant. Or copy
 `custom_components/apsystems_ecu_sunspec` into your configuration folder.
+
+[![Add integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=apsystems_ecu_sunspec)
 
 Then Settings, Devices & services, Add integration, *APsystems ECU SunSpec*. Enter
 the ECU's address. The integration scans the Modbus addresses and shows what it
