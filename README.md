@@ -4,6 +4,7 @@
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz)
 [![Validate](https://github.com/bdecl/apsystems-ecu-sunspec-modbus/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/bdecl/apsystems-ecu-sunspec-modbus/actions/workflows/validate.yml)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.12%2B-18BCF2?logo=homeassistant&logoColor=white)](https://www.home-assistant.io)
+[![Installs](https://img.shields.io/badge/dynamic/json?color=41BDF5&logo=home-assistant&label=installs&cacheSeconds=15600&url=https://analytics.home-assistant.io/custom_integrations.json&query=$.apsystems_ecu_sunspec.total)](https://analytics.home-assistant.io/)
 [![License: MIT](https://img.shields.io/github/license/bdecl/apsystems-ecu-sunspec-modbus)](LICENSE)
 
 Reverse-engineered SunSpec Modbus map of the APsystems ECU-C, measured register by
