@@ -54,7 +54,7 @@ class InverterEntity(CoordinatorEntity[EcuCoordinator]):
             model=layout.model,
             serial_number=layout.serial,
             sw_version=layout.version or None,
-            via_device=(DOMAIN, coordinator.config_entry.unique_id),
+            via_device_id=coordinator.ecu_device_id,
         )
 
     @property

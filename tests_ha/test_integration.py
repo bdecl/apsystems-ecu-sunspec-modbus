@@ -267,3 +267,38 @@ async def test_frozen_data_counts_as_asleep(hass: HomeAssistant, ecu_factory):
     assert _state(hass, "sensor.apsystems_inverter_1_operating_state") == "sleeping"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_no_deprecated_ha_usage(hass: HomeAssistant, ecu_factory, caplog):
+    """No update listener (options reload through OptionsFlowWithReload,
+    reconfigure through async_update_reload_and_abort) and inverter devices
+    linked to the ECU device by id (via_device is removed in 2027.8)."""
+    from homeassistant.helpers import device_registry as dr
+
+    ecu, port = await ecu_factory({1: build_unit("9015000X0001"), 2: build_unit("9015000X0002")})
+    entry, _ = await _setup(hass, port, last_unit=2)
+    assert not entry.update_listeners
+
+    reg = dr.async_get(hass)
+    parent = reg.async_get_device_by_identifier((DOMAIN, entry.unique_id), entry.entry_id)
+    child = reg.async_get_device_by_identifier((DOMAIN, "9015000X0002"), entry.entry_id)
+    assert parent is not None and child is not None and child.via_device_id == parent.id
+
+    # Options: a changed value reloads the entry, which picks it up.
+    r = await hass.config_entries.options.async_init(entry.entry_id)
+    await hass.config_entries.options.async_configure(
+        r["flow_id"], {"scan_interval": 20.0, "limit_keepalive": 0.0})
+    await hass.async_block_till_done()
+    assert entry.runtime_data.update_interval.total_seconds() == 20
+
+    # Reconfigure on the same ECU: reloads without the update listener warning.
+    r = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": entry.entry_id})
+    r = await hass.config_entries.flow.async_configure(
+        r["flow_id"], {"host": "127.0.0.1", "port": port, "last_unit": 2})
+    assert r["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+
+    assert "update listener" not in caplog.text
+    assert "via_device" not in caplog.text
+    assert await hass.config_entries.async_unload(entry.entry_id)

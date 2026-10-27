@@ -6,7 +6,13 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import selector
@@ -161,7 +167,9 @@ class EcuConfigFlow(ConfigFlow, domain=DOMAIN):
         return EcuOptionsFlow()
 
 
-class EcuOptionsFlow(OptionsFlow):
+class EcuOptionsFlow(OptionsFlowWithReload):
+    """Scan interval and limit keepalive; the entry reloads when they change."""
+
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:
             return self.async_create_entry(data={k: int(v) for k, v in user_input.items()})

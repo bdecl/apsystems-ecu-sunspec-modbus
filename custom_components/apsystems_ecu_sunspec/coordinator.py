@@ -50,6 +50,7 @@ class EcuCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._changed_mono: dict[int, float] = {}
         self._changed_at: dict[int, datetime] = {}
         self.stale_after = STALE_AFTER
+        self.ecu_device_id: str | None = None  # set by async_setup_entry
 
     @property
     def control_layout(self) -> UnitLayout | None:
