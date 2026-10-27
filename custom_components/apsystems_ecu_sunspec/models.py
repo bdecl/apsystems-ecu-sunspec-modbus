@@ -450,3 +450,12 @@ def ecu_title(ecu_id: str | None) -> str:
     if not ecu_id:
         return DEFAULT_ECU_TITLE
     return f"{ecu_model(ecu_id)} ({ecu_id[-4:]})"
+
+
+def inverter_name(layout: UnitLayout, layouts: list[UnitLayout]) -> str:
+    """Device name of an inverter: model and the end of its serial, e.g.
+    "QT2-3 (7556)". Unique even with several ECUs, unlike the Modbus
+    address. The whole serial when two inverters of the ECU share an end."""
+    tail = layout.serial[-4:]
+    clash = any(o is not layout and o.serial[-4:] == tail for o in layouts)
+    return f"{layout.model} ({layout.serial if clash else tail})"

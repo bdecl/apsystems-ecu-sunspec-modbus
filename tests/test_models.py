@@ -11,6 +11,7 @@ from ecusunspec.models import (
     clean_ecu_id,
     ecu_model,
     ecu_title,
+    inverter_name,
     channels_for,
     decode_unit,
     measurement_fingerprint,
@@ -158,3 +159,13 @@ def test_clean_ecu_id():
     for bad in ("21500000123", "2150000012345", "21500000123A"):
         with pytest.raises(ValueError):
             clean_ecu_id(bad)
+
+
+def test_inverter_names_from_serial():
+    a = UnitLayout(unit=1, serial="901500017556", model="QT2-3", version="", phases=3)
+    b = UnitLayout(unit=2, serial="901500017557", model="QT2-3", version="", phases=3)
+    assert inverter_name(a, [a, b]) == "QT2-3 (7556)"
+    # same end on one ECU: the whole serial keeps them apart
+    c = UnitLayout(unit=3, serial="901600017556", model="QT2-3", version="", phases=3)
+    assert inverter_name(a, [a, c]) == "QT2-3 (901500017556)"
+    assert inverter_name(b, [a, b, c]) == "QT2-3 (7557)"

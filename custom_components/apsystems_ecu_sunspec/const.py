@@ -22,6 +22,5 @@ READ_TIMEOUT = 3.0
 STALE_AFTER = 900  # s without any change in the measurements: inverter asleep (ECU round ~5 min)
 
 ECU_DEVICE_NAME = "APsystems ECU"
-INVERTER_DEVICE_NAME = "APsystems inverter {unit}"
 
 PLATFORMS = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]

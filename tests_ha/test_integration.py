@@ -68,17 +68,21 @@ async def test_three_phase_array(hass: HomeAssistant, ecu_factory):
     assert float(_state(hass, "sensor.apsystems_ecu_energy")) == pytest.approx(3.114)  # kWh
     assert _state(hass, "sensor.apsystems_ecu_inverters_producing") == "2"
     assert float(_state(hass, "sensor.apsystems_ecu_dc_power_total")) == pytest.approx(2 * 186)
-    assert float(_state(hass, "sensor.apsystems_inverter_1_power")) == 2100
-    assert _state(hass, "sensor.apsystems_inverter_1_operating_state") == "mppt"
-    assert _state(hass, "sensor.apsystems_inverter_1_events") == "none"
-    assert float(_state(hass, "sensor.apsystems_inverter_2_voltage_l1_l2")) == 419
-    assert float(_state(hass, "sensor.apsystems_inverter_2_dc4_voltage")) == pytest.approx(40.5)
+    assert float(_state(hass, "sensor.qt2_3_0001_power")) == 2100
+    assert _state(hass, "sensor.qt2_3_0001_operating_state") == "mppt"
+    assert _state(hass, "sensor.qt2_3_0001_events") == "none"
+    assert float(_state(hass, "sensor.qt2_3_0002_voltage_l1_l2")) == 419
+    assert float(_state(hass, "sensor.qt2_3_0002_dc4_voltage")) == pytest.approx(40.5)
+
+    from homeassistant.helpers import device_registry as dr
+    dev = dr.async_get(hass).async_get_device_by_identifier((DOMAIN, "9015000X0002"), entry.entry_id)
+    assert dev.name == "QT2-3 (0002)" and dev.serial_number == "9015000X0002"
 
     reg = er.async_get(hass)
     # DC points of model 103 are unimplemented on the ECU: no entity at all
-    assert reg.async_get("sensor.apsystems_inverter_1_dc_power") is None
+    assert reg.async_get("sensor.qt2_3_0001_dc_power") is None
     # Phase-to-neutral voltages exist but are disabled by default
-    ent = reg.async_get("sensor.apsystems_inverter_1_voltage_l1_n")
+    ent = reg.async_get("sensor.qt2_3_0001_voltage_l1_n")
     assert ent is not None and ent.disabled_by is not None
 
     # Power limit: tenths of a percent on the wire, enable flag set if it was 0
@@ -104,11 +108,11 @@ async def test_single_phase_two_channels(hass: HomeAssistant, ecu_factory):
     })
     _, summary = await _setup(hass, port, last_unit=3)
     assert summary["phases"] == "1" and summary["dc"] == "2"
-    assert float(_state(hass, "sensor.apsystems_inverter_1_voltage")) == 230.1
+    assert float(_state(hass, "sensor.ds3_l_0001_voltage")) == 230.1
     reg = er.async_get(hass)
-    assert reg.async_get("sensor.apsystems_inverter_1_current_l2") is None
-    assert reg.async_get("sensor.apsystems_inverter_1_dc3_voltage") is None
-    assert reg.async_get("sensor.apsystems_inverter_1_dc2_power") is not None
+    assert reg.async_get("sensor.ds3_l_0001_current_l2") is None
+    assert reg.async_get("sensor.ds3_l_0001_dc3_voltage") is None
+    assert reg.async_get("sensor.ds3_l_0001_dc2_power") is not None
 
 
 async def test_without_dc_block(hass: HomeAssistant, ecu_factory):
@@ -116,7 +120,7 @@ async def test_without_dc_block(hass: HomeAssistant, ecu_factory):
     _, summary = await _setup(hass, port, last_unit=2)
     assert summary["dc"] == "0"
     reg = er.async_get(hass)
-    assert reg.async_get("sensor.apsystems_inverter_1_dc_power_total") is None
+    assert reg.async_get("sensor.qt2_3_0001_dc_power_total") is None
     assert reg.async_get("sensor.apsystems_ecu_dc_power_total") is None
 
 
@@ -144,7 +148,7 @@ async def test_cannot_connect(hass: HomeAssistant):
 async def test_reconfigure_finds_new_inverter(hass: HomeAssistant, ecu_factory):
     ecu, port = await ecu_factory({1: build_unit("9015000X0001")})
     entry, _ = await _setup(hass, port, last_unit=3)
-    assert hass.states.get("sensor.apsystems_inverter_2_power") is None
+    assert hass.states.get("sensor.qt2_3_0002_power") is None
 
     ecu2, port2 = await ecu_factory({
         1: build_unit("9015000X0001"), 2: build_unit("9015000X0002"),
@@ -157,7 +161,7 @@ async def test_reconfigure_finds_new_inverter(hass: HomeAssistant, ecu_factory):
     assert r["reason"] == "reconfigure_successful"
     await hass.async_block_till_done()
     assert len(entry.data["units"]) == 2
-    assert hass.states.get("sensor.apsystems_inverter_2_power") is not None
+    assert hass.states.get("sensor.qt2_3_0002_power") is not None
 
 
 async def test_options_and_diagnostics(hass: HomeAssistant, ecu_factory):
@@ -190,7 +194,7 @@ async def test_falls_back_to_short_reads(hass: HomeAssistant, ecu_factory):
 
     ecu._answer = short_only
     entry, _ = await _setup(hass, port, last_unit=2)
-    assert float(_state(hass, "sensor.apsystems_inverter_1_power")) == 2100
+    assert float(_state(hass, "sensor.qt2_3_0001_power")) == 2100
     assert entry.runtime_data.split_reads == {1}
 
 
@@ -230,7 +234,7 @@ async def test_frozen_data_counts_as_asleep(hass: HomeAssistant, ecu_factory):
     entry, _ = await _setup(hass, port)
     coordinator = entry.runtime_data
     assert _state(hass, "sensor.apsystems_ecu_inverters_online") == "2"
-    assert _state(hass, "sensor.apsystems_inverter_1_last_data_update") not in ("unknown", "unavailable")
+    assert _state(hass, "sensor.qt2_3_0001_last_data_update") not in ("unknown", "unavailable")
 
     # Nothing changes from now on, and the limit is 0 s: both fall asleep.
     coordinator.stale_after = 0
@@ -241,10 +245,10 @@ async def test_frozen_data_counts_as_asleep(hass: HomeAssistant, ecu_factory):
     assert float(_state(hass, "sensor.apsystems_ecu_power")) == 0
     assert float(_state(hass, "sensor.apsystems_ecu_dc_power_total")) == 0
     assert float(_state(hass, "sensor.apsystems_ecu_energy")) == pytest.approx(2 * 2.114)
-    assert _state(hass, "sensor.apsystems_inverter_1_operating_state") == "sleeping"
-    assert float(_state(hass, "sensor.apsystems_inverter_1_power")) == 0
-    assert _state(hass, "sensor.apsystems_inverter_1_voltage_l1_l2") == "unknown"
-    assert _state(hass, "sensor.apsystems_inverter_1_frequency") == "unknown"
+    assert _state(hass, "sensor.qt2_3_0001_operating_state") == "sleeping"
+    assert float(_state(hass, "sensor.qt2_3_0001_power")) == 0
+    assert _state(hass, "sensor.qt2_3_0001_voltage_l1_l2") == "unknown"
+    assert _state(hass, "sensor.qt2_3_0001_frequency") == "unknown"
     # The controls stay usable and keep their real value.
     assert float(_state(hass, "number.apsystems_ecu_power_limit")) == 100
 
@@ -263,8 +267,8 @@ async def test_frozen_data_counts_as_asleep(hass: HomeAssistant, ecu_factory):
     assert _state(hass, "sensor.apsystems_ecu_inverters_online") == "1"
     assert _state(hass, "sensor.apsystems_ecu_inverters_producing") == "1"
     assert float(_state(hass, "sensor.apsystems_ecu_power")) == 1900
-    assert _state(hass, "sensor.apsystems_inverter_2_operating_state") == "mppt"
-    assert _state(hass, "sensor.apsystems_inverter_1_operating_state") == "sleeping"
+    assert _state(hass, "sensor.qt2_3_0002_operating_state") == "mppt"
+    assert _state(hass, "sensor.qt2_3_0001_operating_state") == "sleeping"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
 

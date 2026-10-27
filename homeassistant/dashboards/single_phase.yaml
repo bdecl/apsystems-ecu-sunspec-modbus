@@ -4,12 +4,14 @@
 # How to use: Settings > Dashboards > Add dashboard, open it, three dots >
 # Edit dashboard > three dots > Raw configuration editor, paste this file.
 #
-# Entity ids assume the default device names ("APsystems ECU" and
-# "APsystems inverter <address>"). If you renamed the devices, search and
-# replace "apsystems_ecu_" and "apsystems_inverter_".
+# Entity ids assume the default device names: "APsystems ECU" (no ECU ID
+# entered) and "<model> (<last 4 digits of the serial>)" for the inverters.
+# Replace "ds3_aaaa_" and "ds3_bbbb_" with the start of your inverters'
+# entity ids (e.g. "ds3_7556_"), and "apsystems_ecu_" if you entered an
+# ECU ID (e.g. "ecu_c_1234_").
 #
-# The per-inverter part lists addresses 1 and 2: copy the blocks marked
-# "one per inverter" for every address the integration found.
+# The per-inverter part lists two inverters: copy the blocks marked
+# "one per inverter" for every inverter the integration found.
 
 title: Solar
 views:
@@ -103,18 +105,18 @@ views:
             heading: Inverters
           # one per inverter --------------------------------------------
           - type: tile
-            entity: sensor.apsystems_inverter_1_power
+            entity: sensor.ds3_aaaa_power
             name: Inverter 1
           - type: tile
-            entity: sensor.apsystems_inverter_2_power
+            entity: sensor.ds3_bbbb_power
             name: Inverter 2
           # ---------------------------------------------------------------
           - type: history-graph
             title: Power per inverter
             hours_to_show: 24
             entities:
-              - entity: sensor.apsystems_inverter_1_power   # one per inverter
-              - entity: sensor.apsystems_inverter_2_power
+              - entity: sensor.ds3_aaaa_power   # one per inverter
+              - entity: sensor.ds3_bbbb_power
             grid_options:
               columns: 12
 
@@ -126,19 +128,19 @@ views:
           - type: entities
             title: AC
             entities:
-              - entity: sensor.apsystems_inverter_1_operating_state
+              - entity: sensor.ds3_aaaa_operating_state
                 name: State
-              - entity: sensor.apsystems_inverter_1_power
+              - entity: sensor.ds3_aaaa_power
                 name: Power
-              - entity: sensor.apsystems_inverter_1_current
+              - entity: sensor.ds3_aaaa_current
                 name: Current
-              - entity: sensor.apsystems_inverter_1_voltage
+              - entity: sensor.ds3_aaaa_voltage
                 name: Voltage
-              - entity: sensor.apsystems_inverter_1_frequency
+              - entity: sensor.ds3_aaaa_frequency
                 name: Frequency
-              - entity: sensor.apsystems_inverter_1_temperature
+              - entity: sensor.ds3_aaaa_temperature
                 name: Temperature
-              - entity: sensor.apsystems_inverter_1_events
+              - entity: sensor.ds3_aaaa_events
                 name: Events
             grid_options:
               columns: 12
@@ -146,13 +148,13 @@ views:
             title: DC (panels)
             columns: 2
             entities:
-              - entity: sensor.apsystems_inverter_1_dc1_power
+              - entity: sensor.ds3_aaaa_dc1_power
                 name: DC1
-              - entity: sensor.apsystems_inverter_1_dc2_power
+              - entity: sensor.ds3_aaaa_dc2_power
                 name: DC2
-              - entity: sensor.apsystems_inverter_1_dc1_voltage
+              - entity: sensor.ds3_aaaa_dc1_voltage
                 name: DC1
-              - entity: sensor.apsystems_inverter_1_dc2_voltage
+              - entity: sensor.ds3_aaaa_dc2_voltage
                 name: DC2
             grid_options:
               columns: 12
