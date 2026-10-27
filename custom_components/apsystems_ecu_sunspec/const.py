@@ -11,6 +11,7 @@ CONF_UNITS = "units"
 CONF_CONTROL_UNIT = "control_unit"
 CONF_CONTROLS = "controls"
 CONF_KEEPALIVE = "limit_keepalive"
+CONF_ECU_ID = "ecu_id"
 
 DEFAULT_PORT = 502
 DEFAULT_LAST_UNIT = 32

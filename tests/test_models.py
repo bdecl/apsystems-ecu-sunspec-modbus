@@ -8,6 +8,9 @@ from ecusunspec.models import (
     UnitLayout,
     active_events,
     asleep,
+    clean_ecu_id,
+    ecu_model,
+    ecu_title,
     channels_for,
     decode_unit,
     measurement_fingerprint,
@@ -135,3 +138,23 @@ def test_asleep_values():
     assert d["limit_pct"] == 100.0 and d["limit_enabled"] == 1 and d["conn"] is not None
     # unimplemented points stay unimplemented
     assert d["dc_power"] is None
+
+
+def test_ecu_id_prefixes():
+    # APsystems SunSpec Modbus document: ID rules per ECU model
+    assert ecu_model("215000001234") == "ECU-C"
+    assert ecu_model("216000001234") == "ECU-R"
+    assert ecu_model("216200001234") == "ECU-R Pro"
+    assert ecu_model("216300001234") == "ECU-B"
+    assert ecu_model("999900001234") == "ECU"
+    assert ecu_model(None) is None
+    assert ecu_title("215000001234") == "ECU-C (1234)"
+    assert ecu_title(None) == "APsystems ECU"
+
+
+def test_clean_ecu_id():
+    assert clean_ecu_id(" 2150 0000 1234 ") == "215000001234"
+    assert clean_ecu_id("") is None and clean_ecu_id(None) is None
+    for bad in ("21500000123", "2150000012345", "21500000123A"):
+        with pytest.raises(ValueError):
+            clean_ecu_id(bad)

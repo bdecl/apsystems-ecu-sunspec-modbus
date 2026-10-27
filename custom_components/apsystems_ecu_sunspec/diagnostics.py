@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 
 from . import EcuConfigEntry
 
-REDACT = {CONF_HOST, "serial", "unique_id", "title"}
+REDACT = {CONF_HOST, "serial", "unique_id", "title", "ecu_id", "serial_number"}
 
 
 async def async_get_config_entry_diagnostics(

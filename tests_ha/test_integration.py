@@ -302,3 +302,83 @@ async def test_no_deprecated_ha_usage(hass: HomeAssistant, ecu_factory, caplog):
     assert "update listener" not in caplog.text
     assert "via_device" not in caplog.text
     assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_ecu_id_names_the_ecu(hass: HomeAssistant, ecu_factory):
+    """The ECU is invisible over Modbus: an ECU ID typed at setup gives the
+    entry and the ECU device their name, model and serial number."""
+    from homeassistant.helpers import device_registry as dr
+
+    _, port = await ecu_factory({1: build_unit("9015000X0001")})
+    r = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+    r = await hass.config_entries.flow.async_configure(
+        r["flow_id"], {"host": "127.0.0.1", "port": port, "last_unit": 2, "ecu_id": "2150 0000 1234"})
+    r = await hass.config_entries.flow.async_configure(r["flow_id"], {})
+    await hass.async_block_till_done()
+    entry = r["result"]
+    assert entry.title == "ECU-C (1234)" and entry.data["ecu_id"] == "215000001234"
+    device = dr.async_get(hass).async_get_device_by_identifier((DOMAIN, entry.unique_id), entry.entry_id)
+    assert device.name == "ECU-C (1234)" and device.model == "ECU-C"
+    assert device.serial_number == "215000001234"
+    assert hass.states.get("sensor.ecu_c_1234_power") is not None
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_ecu_id_is_checked(hass: HomeAssistant, ecu_factory):
+    _, port = await ecu_factory({1: build_unit("9015000X0001")})
+    r = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+    r = await hass.config_entries.flow.async_configure(
+        r["flow_id"], {"host": "127.0.0.1", "port": port, "last_unit": 2, "ecu_id": "2150001234"})
+    assert r["type"] is FlowResultType.FORM and r["errors"] == {"ecu_id": "invalid_ecu_id"}
+
+
+async def test_ecu_id_added_later(hass: HomeAssistant, ecu_factory):
+    """Reconfigure can add the ID to an existing entry: the default title
+    follows it, a title the user chose stays. Entity ids do not change."""
+    from homeassistant.helpers import device_registry as dr
+
+    _, port = await ecu_factory({1: build_unit("9015000X0001")})
+    entry, _ = await _setup(hass, port, last_unit=2)
+    assert entry.title == "APsystems ECU"
+
+    async def reconfigure(ecu_id):
+        r = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": entry.entry_id})
+        r = await hass.config_entries.flow.async_configure(
+            r["flow_id"], {"host": "127.0.0.1", "port": port, "last_unit": 2, "ecu_id": ecu_id})
+        assert r["reason"] == "reconfigure_successful"
+        await hass.async_block_till_done()
+
+    await reconfigure("216200005678")
+    assert entry.title == "ECU-R Pro (5678)"
+    device = dr.async_get(hass).async_get_device_by_identifier((DOMAIN, entry.unique_id), entry.entry_id)
+    assert device.name == "ECU-R Pro (5678)" and device.serial_number == "216200005678"
+    assert hass.states.get("sensor.apsystems_ecu_power") is not None  # same entity ids
+
+    hass.config_entries.async_update_entry(entry, title="ECU garage")
+    await reconfigure("215000001234")
+    assert entry.title == "ECU garage"
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_two_ecus(hass: HomeAssistant, ecu_factory):
+    """Two ECUs: one entry and one Modbus link each, and with their IDs typed
+    in, the ECU devices and their entities can be told apart."""
+    from homeassistant.components.modbus.connection import async_get_connection_info
+
+    _, p1 = await ecu_factory({1: build_unit("9015000A0001")})
+    _, p2 = await ecu_factory({1: build_unit("9015000B0001")})
+    entries = []
+    for port, ecu_id in ((p1, "215000001111"), (p2, "216000002222")):
+        r = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+        r = await hass.config_entries.flow.async_configure(
+            r["flow_id"], {"host": "127.0.0.1", "port": port, "last_unit": 1, "ecu_id": ecu_id})
+        r = await hass.config_entries.flow.async_configure(r["flow_id"], {})
+        await hass.async_block_till_done()
+        entries.append(r["result"])
+    assert len({e.unique_id for e in entries}) == 2
+    assert len(async_get_connection_info(hass)) == 2
+    assert hass.states.get("sensor.ecu_c_1111_power") is not None
+    assert hass.states.get("sensor.ecu_r_2222_power") is not None
+    for e in entries:
+        assert await hass.config_entries.async_unload(e.entry_id)

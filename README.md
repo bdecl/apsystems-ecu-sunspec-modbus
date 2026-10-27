@@ -159,6 +159,20 @@ single-phase dashboard built from native cards only. Paste one into a dashboard'
 raw configuration editor and copy the per-inverter blocks for each of your
 inverters.
 
+### ECU ID
+
+The ECU itself is not visible over Modbus, so the setup form has an optional
+**ECU ID** field: the 12 digits on the ECU label or in EMA. With it, the ECU
+device is named after its model and the end of its ID, for example
+*ECU-C (1234)*, and shows its model and serial number. The prefix gives the model,
+after APsystems' SunSpec Modbus document: `215` ECU-C, `2160` ECU-R,
+`2162` ECU-R Pro. It can also be added later with *Reconfigure*.
+
+On a new installation with an ECU ID, the ECU entities are named after the device
+(`sensor.ecu_c_1234_power`) instead of `sensor.apsystems_ecu_power`: adapt the
+example dashboards. With two ECUs this is what keeps them apart. Adding the ID to
+an existing entry renames the device, not the entities.
+
 ### Night and sleeping inverters
 
 When the inverters stop at dusk, the ECU goes on answering with the values of its
