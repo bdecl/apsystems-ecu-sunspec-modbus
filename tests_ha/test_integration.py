@@ -218,3 +218,52 @@ async def test_uses_shared_connection(hass: HomeAssistant, ecu_factory):
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert async_get_connection_info(hass) == []
+
+
+async def test_frozen_data_counts_as_asleep(hass: HomeAssistant, ecu_factory):
+    """At dusk the ECU keeps serving the last values of the inverters. Data
+    that stops changing is shown as asleep, per inverter, until it moves."""
+    ecu, port = await ecu_factory({
+        1: build_unit("9015000X0001", power_w=2100),
+        2: build_unit("9015000X0002", power_w=1900),
+    })
+    entry, _ = await _setup(hass, port)
+    coordinator = entry.runtime_data
+    assert _state(hass, "sensor.apsystems_ecu_inverters_online") == "2"
+    assert _state(hass, "sensor.apsystems_inverter_1_last_data_update") not in ("unknown", "unavailable")
+
+    # Nothing changes from now on, and the limit is 0 s: both fall asleep.
+    coordinator.stale_after = 0
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert _state(hass, "sensor.apsystems_ecu_inverters_online") == "0"
+    assert _state(hass, "sensor.apsystems_ecu_inverters_producing") == "0"
+    assert float(_state(hass, "sensor.apsystems_ecu_power")) == 0
+    assert float(_state(hass, "sensor.apsystems_ecu_dc_power_total")) == 0
+    assert float(_state(hass, "sensor.apsystems_ecu_energy")) == pytest.approx(2 * 2.114)
+    assert _state(hass, "sensor.apsystems_inverter_1_operating_state") == "sleeping"
+    assert float(_state(hass, "sensor.apsystems_inverter_1_power")) == 0
+    assert _state(hass, "sensor.apsystems_inverter_1_voltage_l1_l2") == "unknown"
+    assert _state(hass, "sensor.apsystems_inverter_1_frequency") == "unknown"
+    # The controls stay usable and keep their real value.
+    assert float(_state(hass, "number.apsystems_ecu_power_limit")) == 100
+
+    # Writing a limit does not wake anything up.
+    await hass.services.async_call(
+        "number", "set_value",
+        {"entity_id": "number.apsystems_ecu_power_limit", "value": 80}, blocking=True)
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert _state(hass, "sensor.apsystems_ecu_inverters_online") == "0"
+
+    # Morning: the ECU brings new data for inverter 2 only.
+    ecu.set(2, 40086, ecu.reg(2, 40086) + 1)  # frequency moves
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert _state(hass, "sensor.apsystems_ecu_inverters_online") == "1"
+    assert _state(hass, "sensor.apsystems_ecu_inverters_producing") == "1"
+    assert float(_state(hass, "sensor.apsystems_ecu_power")) == 1900
+    assert _state(hass, "sensor.apsystems_inverter_2_operating_state") == "mppt"
+    assert _state(hass, "sensor.apsystems_inverter_1_operating_state") == "sleeping"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)

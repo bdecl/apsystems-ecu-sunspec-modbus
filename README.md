@@ -159,6 +159,21 @@ single-phase dashboard built from native cards only. Paste one into a dashboard'
 raw configuration editor and copy the per-inverter blocks for each of your
 inverters.
 
+### Night and sleeping inverters
+
+When the inverters stop at dusk, the ECU goes on answering with the values of its
+last round: a few watts, the grid voltage and frequency, operating state *MPPT*.
+No register says that the data is old. During the day the ECU refreshes it about
+every 5 minutes and the measurements change at nearly every round, so an inverter
+whose measurements have not changed for 15 minutes is shown as asleep: power and
+currents 0, voltage, frequency and temperature unknown, operating state
+*Sleeping*. Energy counters keep their value. It wakes up with the first new data
+in the morning. *Inverters online* and *Inverters producing* count only inverters
+with fresh data, and each inverter has a *Last data update* sensor.
+
+After a restart at night the old values show for those first 15 minutes, until
+the integration has seen that they do not move.
+
 ### Limits
 
 - The ECU itself is not visible over Modbus: no ECU serial, no ECU model, and its

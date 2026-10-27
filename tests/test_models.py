@@ -7,8 +7,10 @@ from ecusunspec.models import (
     ModelRef,
     UnitLayout,
     active_events,
+    asleep,
     channels_for,
     decode_unit,
+    measurement_fingerprint,
     merge_ranges,
 )
 
@@ -99,3 +101,37 @@ def test_channels_and_events():
 def test_unmerged_spans_one_per_model():
     spans = layout().spans(include_controls=True, merge=False)
     assert spans == [(40072, 40122), (40124, 40184), (40186, 40210), (40214, 40262)]
+
+
+def test_fingerprint_ignores_controls():
+    """Writing a power limit must not make old measurements look fresh."""
+    img = words(build_unit("9015000X0001"))
+    fp = measurement_fingerprint(layout(), img)
+    img[40189] = 500  # WMaxLimPct
+    img[40193] = 0  # WMaxLim_Ena
+    assert measurement_fingerprint(layout(), img) == fp
+    img[40086] += 1  # Hz in the integer model
+    assert measurement_fingerprint(layout(), img) != fp
+
+
+def test_fingerprint_covers_dc_block():
+    img = words(build_unit("9015000X0001"))
+    fp = measurement_fingerprint(layout(), img)
+    img[DC_HEADER + 2] ^= 1  # DCV1, low bit
+    assert measurement_fingerprint(layout(), img) != fp
+
+
+def test_asleep_values():
+    d = asleep(decode_unit(layout(), words(build_unit("9015000X0001")), True))
+    assert d["state"] == 2  # sleeping, whatever the ECU still says
+    assert d["power"] == 0.0 and d["current"] == 0.0 and d["current_a"] == 0.0
+    assert d["dc_power_total"] == 0.0 and d["dc1_power"] == 0.0 and d["dc1_current"] == 0.0
+    assert d["apparent_power"] == 0.0 and d["reactive_power"] == 0.0
+    assert d["voltage_ab"] is None and d["dc1_voltage"] is None
+    assert d["frequency"] is None and d["temperature"] is None and d["power_factor"] is None
+    assert d["events"] is None
+    assert d["energy"] == 2114  # counters keep their value
+    # the global controls of the control unit are not measurements
+    assert d["limit_pct"] == 100.0 and d["limit_enabled"] == 1 and d["conn"] is not None
+    # unimplemented points stay unimplemented
+    assert d["dc_power"] is None

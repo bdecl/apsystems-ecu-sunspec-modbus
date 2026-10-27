@@ -1,18 +1,27 @@
 """Polling coordinator: every detected unit per cycle, controls on one unit."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
+from time import monotonic
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
-from .const import CONF_CONTROL_UNIT, CONF_KEEPALIVE, CONF_UNITS, DEFAULT_KEEPALIVE, DOMAIN
+from .const import (
+    CONF_CONTROL_UNIT,
+    CONF_KEEPALIVE,
+    CONF_UNITS,
+    DEFAULT_KEEPALIVE,
+    DOMAIN,
+    STALE_AFTER,
+)
 from .hub import EcuHub, HubError, IllegalAddress
-from .models import UnitLayout, active_events, decode_unit
+from .models import UnitLayout, active_events, asleep, decode_unit, measurement_fingerprint
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +44,12 @@ class EcuCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._unsub_keepalive = None
         # Units on which long merged reads failed: polled one model per read.
         self.split_reads: set[int] = set()
+        # Per unit: last measurement registers, when they last changed (monotonic
+        # clock, for the decision) and the same moment as a date (shown).
+        self._fingerprints: dict[int, tuple[int, ...]] = {}
+        self._changed_mono: dict[int, float] = {}
+        self._changed_at: dict[int, datetime] = {}
+        self.stale_after = STALE_AFTER
 
     @property
     def control_layout(self) -> UnitLayout | None:
@@ -51,12 +66,30 @@ class EcuCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 errors.append(str(err))
                 units[layout.unit] = None
                 continue
-            units[layout.unit] = decode_unit(layout, words, ctrl)
+            units[layout.unit] = self._freshness(layout, words, decode_unit(layout, words, ctrl))
         if all(v is None for v in units.values()):
             raise UpdateFailed(f"No answer from the ECU at {self.hub.host}:{self.hub.port}: {errors[0]}")
         if errors:
             _LOGGER.debug("Partial read: %s", errors)
         return {"units": units, "ecu": self._aggregate(units)}
+
+    def _freshness(self, layout: UnitLayout, words: dict[int, int], data: dict) -> dict:
+        """Flag data the ECU has not refreshed for a while as asleep.
+
+        Until a unit has been watched for `stale_after`, its data counts as
+        fresh: after a restart at night the old values show for that long.
+        """
+        fingerprint = measurement_fingerprint(layout, words)
+        now = monotonic()
+        if self._fingerprints.get(layout.unit) != fingerprint:
+            self._fingerprints[layout.unit] = fingerprint
+            self._changed_mono[layout.unit] = now
+            self._changed_at[layout.unit] = dt_util.utcnow()
+        stale = now - self._changed_mono[layout.unit] > self.stale_after
+        out = asleep(data) if stale else data
+        out["stale"] = stale
+        out["last_update"] = self._changed_at[layout.unit]
+        return out
 
     async def _read_unit(self, layout: UnitLayout, ctrl: bool) -> dict[int, int]:
         """Merged reads (up to 125 registers) by default. The ECU answers an
@@ -73,11 +106,13 @@ class EcuCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return words
 
     def _aggregate(self, units: dict[int, dict | None]) -> dict[str, Any]:
-        live = [d for d in units.values() if d is not None]
-        complete = len(live) == len(units)
+        answered = [d for d in units.values() if d is not None]
+        live = [d for d in answered if not d.get("stale")]
+        complete = len(answered) == len(units)
 
         def total(key: str, need_all: bool) -> float | None:
-            vals = [d.get(key) for d in live]
+            # Sleeping inverters count with what asleep() gives them: 0 W.
+            vals = [d.get(key) for d in answered]
             if not vals or any(v is None for v in vals) or (need_all and not complete):
                 return None
             return round(sum(vals), 3)
