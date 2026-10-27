@@ -3,7 +3,7 @@
 [![GitHub release](https://img.shields.io/github/v/release/bdecl/apsystems-ecu-sunspec-modbus)](https://github.com/bdecl/apsystems-ecu-sunspec-modbus/releases)
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz)
 [![Validate](https://github.com/bdecl/apsystems-ecu-sunspec-modbus/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/bdecl/apsystems-ecu-sunspec-modbus/actions/workflows/validate.yml)
-[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.12%2B-18BCF2?logo=homeassistant&logoColor=white)](https://www.home-assistant.io)
+[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2026.10%2B-18BCF2?logo=homeassistant&logoColor=white)](https://www.home-assistant.io)
 [![Installs](https://img.shields.io/badge/dynamic/json?color=41BDF5&logo=home-assistant&label=installs&cacheSeconds=15600&url=https://analytics.home-assistant.io/custom_integrations.json&query=$.apsystems_ecu_sunspec.total)](https://analytics.home-assistant.io/)
 [![License: MIT](https://img.shields.io/github/license/bdecl/apsystems-ecu-sunspec-modbus)](LICENSE)
 
@@ -90,6 +90,14 @@ HACS, three dots, Custom repositories, add this repository as an *Integration*,
 then install **APsystems ECU SunSpec (Modbus)** and restart Home Assistant. Or copy
 `custom_components/apsystems_ecu_sunspec` into your configuration folder.
 
+Home Assistant 2026.10 or newer is required. The integration takes its Modbus
+connection from Home Assistant's own `modbus` integration rather than opening its
+own socket: every integration that addresses the same host and port shares one
+connection, and their requests queue instead of competing. A second Modbus client
+has been reported to make an ECU stop answering, so that matters. A `modbus:`
+hub declared in YAML still opens a separate connection: do not point one at the
+ECU while the integration is in use.
+
 [![Add integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=apsystems_ecu_sunspec)
 
 Then Settings, Devices & services, Add integration, *APsystems ECU SunSpec*. Enter
@@ -107,7 +115,9 @@ If you add inverters later, use *Reconfigure* on the integration to scan again.
 
 ### What you get
 
-One device for the array, one per inverter.
+One device for the array, one per inverter. Inverters are named after their model
+and the last 5 digits of their serial number, for example *QT2-3 (17556)*, so the names stay
+unique with several ECUs and do not depend on the Modbus addresses set in EMA.
 
 | Device | Entities |
 |---|---|
@@ -150,6 +160,35 @@ to the inverters takes about 20 s.
 single-phase dashboard built from native cards only. Paste one into a dashboard's
 raw configuration editor and copy the per-inverter blocks for each of your
 inverters.
+
+### ECU ID
+
+The ECU itself is not visible over Modbus, so the setup form has an optional
+**ECU ID** field: the 12 digits on the ECU label or in EMA. With it, the ECU
+device is named after its model and the end of its ID, for example
+*ECU-C (1234)*, and shows its model and serial number. The prefix gives the model,
+after APsystems' SunSpec Modbus document: `215` ECU-C, `2160` ECU-R,
+`2162` ECU-R Pro. It can also be added later with *Reconfigure*.
+
+On a new installation with an ECU ID, the ECU entities are named after the device
+(`sensor.ecu_c_1234_power`) instead of `sensor.apsystems_ecu_power`: adapt the
+example dashboards. With two ECUs this is what keeps them apart. Adding the ID to
+an existing entry renames the device, not the entities.
+
+### Night and sleeping inverters
+
+When the inverters stop at dusk, the ECU goes on answering with the values of its
+last round: a few watts, the grid voltage and frequency, operating state *MPPT*.
+No register says that the data is old. During the day the ECU refreshes it about
+every 5 minutes and the measurements change at nearly every round, so an inverter
+whose measurements have not changed for 15 minutes is shown as asleep: power and
+currents 0, voltage, frequency and temperature unknown, operating state
+*Sleeping*. Energy counters keep their value. It wakes up with the first new data
+in the morning. *Inverters online* and *Inverters producing* count only inverters
+with fresh data, and each inverter has a *Last data update* sensor.
+
+After a restart at night the old values show for those first 15 minutes, until
+the integration has seen that they do not move.
 
 ### Limits
 

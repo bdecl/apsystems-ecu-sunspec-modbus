@@ -7,7 +7,11 @@
         "data": {
           "host": "Hôte",
           "port": "Port",
-          "last_unit": "Adresse Modbus la plus haute à balayer"
+          "last_unit": "Adresse Modbus la plus haute à balayer",
+          "ecu_id": "ECU ID (facultatif)"
+        },
+        "data_description": {
+          "ecu_id": "Les 12 chiffres de l'étiquette de l'ECU ou d'EMA. L'ECU n'est pas visible en Modbus : son ID donne à l'appareil son nom et son modèle (215… ECU-C, 2160… ECU-R, 2162… ECU-R Pro)."
         }
       },
       "confirm": {
@@ -21,14 +25,19 @@
         "data": {
           "host": "Hôte",
           "port": "Port",
-          "last_unit": "Adresse Modbus la plus haute à balayer"
+          "last_unit": "Adresse Modbus la plus haute à balayer",
+          "ecu_id": "ECU ID (facultatif)"
+        },
+        "data_description": {
+          "ecu_id": "Les 12 chiffres de l'étiquette de l'ECU ou d'EMA. L'ECU n'est pas visible en Modbus : son ID donne à l'appareil son nom et son modèle (215… ECU-C, 2160… ECU-R, 2162… ECU-R Pro)."
         }
       }
     },
     "error": {
       "cannot_connect": "Aucune réponse sur cet hôte et ce port. Vérifiez l'adresse et que SunSpec est activé dans les réglages de l'ECU.",
       "no_inverters": "L'ECU répond mais aucun onduleur n'a été trouvé. Vérifiez que les onduleurs ont une adresse Modbus dans les réglages de l'ECU, ainsi que l'adresse la plus haute à balayer.",
-      "adapter_unsupported": "Il s'agit de l'adaptateur bolkedebruin/apsystems-sunspec (en général port 1502), pas du serveur SunSpec propre à l'ECU. Il n'est pas encore pris en charge : utilisez le port 502."
+      "adapter_unsupported": "Il s'agit de l'adaptateur bolkedebruin/apsystems-sunspec (en général port 1502), pas du serveur SunSpec propre à l'ECU. Il n'est pas encore pris en charge : utilisez le port 502.",
+      "invalid_ecu_id": "L'ECU ID compte 12 chiffres."
     },
     "abort": {
       "already_configured": "Cet ECU est déjà configuré.",

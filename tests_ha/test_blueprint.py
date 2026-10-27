@@ -14,6 +14,10 @@ SRC = (pathlib.Path(__file__).parents[1] / "blueprints" / "automation"
        / "apsystems_ecu_sunspec" / "zero_export.yaml")
 RATED = 18000
 
+# The blueprint runs on a time pattern, whose next tick is still scheduled when
+# a test ends; that is expected, not a leak.
+pytestmark = pytest.mark.parametrize("expected_lingering_timers", [True])
+
 
 @pytest.fixture
 def blueprint(hass: HomeAssistant):

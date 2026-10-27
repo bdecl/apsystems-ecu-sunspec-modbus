@@ -95,6 +95,11 @@ COMMON = (
         key="state", name="Operating state", device_class=SensorDeviceClass.ENUM,
         options=list(OPERATING_STATES.values()), translation_key="operating_state"),
     EcuSensorDescription(key="events", name="Events", entity_category=DIAG),
+    # When the ECU last brought new measurements for this inverter: it goes on
+    # serving the old ones once the inverter sleeps.
+    EcuSensorDescription(
+        key="last_update", name="Last data update", device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=DIAG, always=True),
     # DC points of the inverter model itself: unimplemented on the ECU-C, kept
     # for firmwares that do fill them (skipped automatically otherwise).
     _w("dc_power", "DC power"),

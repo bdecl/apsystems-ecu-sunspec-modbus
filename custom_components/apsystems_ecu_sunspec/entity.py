@@ -6,19 +6,23 @@ from typing import Any
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, ECU_DEVICE_NAME, INVERTER_DEVICE_NAME, MANUFACTURER
+from .const import CONF_ECU_ID, DOMAIN, ECU_DEVICE_NAME, MANUFACTURER
 from .coordinator import EcuCoordinator
-from .models import UnitLayout
+from .models import UnitLayout, ecu_model, inverter_name
 
 
 def ecu_device(coordinator: EcuCoordinator) -> DeviceInfo:
     entry = coordinator.config_entry
-    return DeviceInfo(
+    ecu_id = entry.data.get(CONF_ECU_ID)
+    info = DeviceInfo(
         identifiers={(DOMAIN, entry.unique_id)},
-        name=ECU_DEVICE_NAME,
+        name=entry.title or ECU_DEVICE_NAME,
         manufacturer=MANUFACTURER,
-        model="ECU (SunSpec Modbus)",
+        model=ecu_model(ecu_id) or "ECU (SunSpec Modbus)",
     )
+    if ecu_id:
+        info["serial_number"] = ecu_id
+    return info
 
 
 class EcuEntity(CoordinatorEntity[EcuCoordinator]):
@@ -49,12 +53,12 @@ class InverterEntity(CoordinatorEntity[EcuCoordinator]):
         self._attr_unique_id = f"{layout.serial}_{key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, layout.serial)},
-            name=INVERTER_DEVICE_NAME.format(unit=layout.unit),
+            name=inverter_name(layout, coordinator.units),
             manufacturer=MANUFACTURER,
             model=layout.model,
             serial_number=layout.serial,
             sw_version=layout.version or None,
-            via_device=(DOMAIN, coordinator.config_entry.unique_id),
+            via_device_id=coordinator.ecu_device_id,
         )
 
     @property

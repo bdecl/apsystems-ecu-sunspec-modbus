@@ -374,3 +374,91 @@ def decode_unit(layout: UnitLayout, words: dict[int, int], with_controls: bool) 
         if cw:
             data.update(decode_controls(cw))
     return data
+
+
+# --- data the ECU keeps serving after the inverters went to sleep -----------
+#
+# Once the inverters stop at dusk, the ECU goes on answering with the values of
+# its last round: voltage, frequency, a few watts, operating state "MPPT". No
+# register says the data is old. During the day the ECU refreshes them about
+# every 5 minutes and the measurements change at nearly every round, so data
+# that has not changed for several rounds is taken as asleep.
+
+STATE_SLEEPING = 2
+_QUANTITIES_WITHOUT_ZERO = ("voltage", "frequency", "temperature", "power_factor", "events")
+
+
+def measurement_fingerprint(layout: UnitLayout, words: dict[int, int]) -> tuple[int, ...]:
+    """The measurement registers of one unit, controls excluded (writing a
+    limit must not make old data look fresh)."""
+    ranges = [(m.start, m.end) for m in (layout.int_model, layout.float_model) if m]
+    if layout.dc_channels:
+        ranges.append((DC_HEADER + 2, DC_HEADER + 2 + DC_LENGTH))
+    return tuple(words.get(a, -1) for start, end in sorted(ranges) for a in range(start, end))
+
+
+def asleep(data: dict) -> dict:
+    """What an inverter that stopped producing reports: no power and no
+    current, no live voltage, frequency or temperature, state sleeping.
+    Energy counters keep their last value."""
+    out = dict(data)
+    for key, value in data.items():
+        if value is None or key in ("energy", "conn", "limit_pct", "limit_enabled", "limit_pct_sf"):
+            continue
+        if any(q in key for q in _QUANTITIES_WITHOUT_ZERO):
+            out[key] = None
+        elif "power" in key or "current" in key:
+            out[key] = 0.0
+    out["state"] = STATE_SLEEPING
+    return out
+
+
+# --- the ECU itself ---------------------------------------------------------
+#
+# The ECU does not show itself over Modbus, so its ID (12 digits, on the label
+# and in EMA) is typed in at setup. Its prefix tells the model, after
+# APsystems' SunSpec Modbus document.
+
+ECU_ID_PREFIXES = (  # longest first
+    ("2160", "ECU-R"),
+    ("2162", "ECU-R Pro"),
+    ("2163", "ECU-B"),
+    ("215", "ECU-C"),
+)
+DEFAULT_ECU_TITLE = "APsystems ECU"
+
+
+def clean_ecu_id(text: str | None) -> str | None:
+    """The ECU ID without spaces, or None when left empty. Raises ValueError
+    unless it is 12 digits."""
+    value = "".join((text or "").split())
+    if not value:
+        return None
+    if len(value) != 12 or not value.isdigit():
+        raise ValueError(value)
+    return value
+
+
+def ecu_model(ecu_id: str | None) -> str | None:
+    if not ecu_id:
+        return None
+    return next((name for prefix, name in ECU_ID_PREFIXES if ecu_id.startswith(prefix)), "ECU")
+
+
+def ecu_title(ecu_id: str | None) -> str:
+    """Name of the entry and of the ECU device: model and ID tail."""
+    if not ecu_id:
+        return DEFAULT_ECU_TITLE
+    return f"{ecu_model(ecu_id)} ({ecu_id[-4:]})"
+
+
+INVERTER_SERIAL_TAIL = 5
+
+
+def inverter_name(layout: UnitLayout, layouts: list[UnitLayout]) -> str:
+    """Device name of an inverter: model and the last 5 digits of its serial,
+    e.g. "QT2-3 (17556)". Unique even with several ECUs, unlike the Modbus
+    address. The whole serial when two inverters of the ECU share an end."""
+    tail = layout.serial[-INVERTER_SERIAL_TAIL:]
+    clash = any(o is not layout and o.serial[-INVERTER_SERIAL_TAIL:] == tail for o in layouts)
+    return f"{layout.model} ({layout.serial if clash else tail})"

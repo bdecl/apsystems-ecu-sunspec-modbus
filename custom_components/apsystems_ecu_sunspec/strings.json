@@ -7,7 +7,11 @@
         "data": {
           "host": "Host",
           "port": "Port",
-          "last_unit": "Highest Modbus address to scan"
+          "last_unit": "Highest Modbus address to scan",
+          "ecu_id": "ECU ID (optional)"
+        },
+        "data_description": {
+          "ecu_id": "The 12 digits on the ECU label or in EMA. The ECU is not visible over Modbus: its ID gives the device its name and model (215… ECU-C, 2160… ECU-R, 2162… ECU-R Pro)."
         }
       },
       "confirm": {
@@ -21,14 +25,19 @@
         "data": {
           "host": "Host",
           "port": "Port",
-          "last_unit": "Highest Modbus address to scan"
+          "last_unit": "Highest Modbus address to scan",
+          "ecu_id": "ECU ID (optional)"
+        },
+        "data_description": {
+          "ecu_id": "The 12 digits on the ECU label or in EMA. The ECU is not visible over Modbus: its ID gives the device its name and model (215… ECU-C, 2160… ECU-R, 2162… ECU-R Pro)."
         }
       }
     },
     "error": {
       "cannot_connect": "No answer on this host and port. Check the address and that SunSpec is switched on in the ECU settings.",
       "no_inverters": "The ECU answers but no inverter was found. Check that the inverters have Modbus addresses in the ECU settings, and the highest address to scan.",
-      "adapter_unsupported": "This is the bolkedebruin/apsystems-sunspec adapter (usually port 1502), not the ECU's own SunSpec server. It is not supported yet: use port 502."
+      "adapter_unsupported": "This is the bolkedebruin/apsystems-sunspec adapter (usually port 1502), not the ECU's own SunSpec server. It is not supported yet: use port 502.",
+      "invalid_ecu_id": "The ECU ID has 12 digits."
     },
     "abort": {
       "already_configured": "This ECU is already configured.",
