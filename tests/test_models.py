@@ -163,9 +163,10 @@ def test_clean_ecu_id():
 
 def test_inverter_names_from_serial():
     a = UnitLayout(unit=1, serial="901500017556", model="QT2-3", version="", phases=3)
-    b = UnitLayout(unit=2, serial="901500017557", model="QT2-3", version="", phases=3)
-    assert inverter_name(a, [a, b]) == "QT2-3 (7556)"
-    # same end on one ECU: the whole serial keeps them apart
+    b = UnitLayout(unit=2, serial="901500027556", model="QT2-3", version="", phases=3)
+    assert inverter_name(a, [a, b]) == "QT2-3 (17556)"  # 4 digits would clash here
+    assert inverter_name(b, [a, b]) == "QT2-3 (27556)"
+    # same 5 last digits on one ECU: the whole serial keeps them apart
     c = UnitLayout(unit=3, serial="901600017556", model="QT2-3", version="", phases=3)
     assert inverter_name(a, [a, c]) == "QT2-3 (901500017556)"
-    assert inverter_name(b, [a, b, c]) == "QT2-3 (7557)"
+    assert inverter_name(b, [a, b, c]) == "QT2-3 (27556)"

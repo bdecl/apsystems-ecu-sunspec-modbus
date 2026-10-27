@@ -116,7 +116,7 @@ If you add inverters later, use *Reconfigure* on the integration to scan again.
 ### What you get
 
 One device for the array, one per inverter. Inverters are named after their model
-and the end of their serial number, for example *QT2-3 (7556)*, so the names stay
+and the last 5 digits of their serial number, for example *QT2-3 (17556)*, so the names stay
 unique with several ECUs and do not depend on the Modbus addresses set in EMA.
 
 | Device | Entities |

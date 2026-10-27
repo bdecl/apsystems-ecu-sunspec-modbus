@@ -5,9 +5,9 @@
 # Edit dashboard > three dots > Raw configuration editor, paste this file.
 #
 # Entity ids assume the default device names: "APsystems ECU" (no ECU ID
-# entered) and "<model> (<last 4 digits of the serial>)" for the inverters.
-# Replace "ds3_aaaa_" and "ds3_bbbb_" with the start of your inverters'
-# entity ids (e.g. "ds3_7556_"), and "apsystems_ecu_" if you entered an
+# entered) and "<model> (<last 5 digits of the serial>)" for the inverters.
+# Replace "ds3_aaaaa_" and "ds3_bbbbb_" with the start of your inverters'
+# entity ids (e.g. "ds3_17556_"), and "apsystems_ecu_" if you entered an
 # ECU ID (e.g. "ecu_c_1234_").
 #
 # The per-inverter part lists two inverters: copy the blocks marked
@@ -105,18 +105,18 @@ views:
             heading: Inverters
           # one per inverter --------------------------------------------
           - type: tile
-            entity: sensor.ds3_aaaa_power
+            entity: sensor.ds3_aaaaa_power
             name: Inverter 1
           - type: tile
-            entity: sensor.ds3_bbbb_power
+            entity: sensor.ds3_bbbbb_power
             name: Inverter 2
           # ---------------------------------------------------------------
           - type: history-graph
             title: Power per inverter
             hours_to_show: 24
             entities:
-              - entity: sensor.ds3_aaaa_power   # one per inverter
-              - entity: sensor.ds3_bbbb_power
+              - entity: sensor.ds3_aaaaa_power   # one per inverter
+              - entity: sensor.ds3_bbbbb_power
             grid_options:
               columns: 12
 
@@ -128,19 +128,19 @@ views:
           - type: entities
             title: AC
             entities:
-              - entity: sensor.ds3_aaaa_operating_state
+              - entity: sensor.ds3_aaaaa_operating_state
                 name: State
-              - entity: sensor.ds3_aaaa_power
+              - entity: sensor.ds3_aaaaa_power
                 name: Power
-              - entity: sensor.ds3_aaaa_current
+              - entity: sensor.ds3_aaaaa_current
                 name: Current
-              - entity: sensor.ds3_aaaa_voltage
+              - entity: sensor.ds3_aaaaa_voltage
                 name: Voltage
-              - entity: sensor.ds3_aaaa_frequency
+              - entity: sensor.ds3_aaaaa_frequency
                 name: Frequency
-              - entity: sensor.ds3_aaaa_temperature
+              - entity: sensor.ds3_aaaaa_temperature
                 name: Temperature
-              - entity: sensor.ds3_aaaa_events
+              - entity: sensor.ds3_aaaaa_events
                 name: Events
             grid_options:
               columns: 12
@@ -148,13 +148,13 @@ views:
             title: DC (panels)
             columns: 2
             entities:
-              - entity: sensor.ds3_aaaa_dc1_power
+              - entity: sensor.ds3_aaaaa_dc1_power
                 name: DC1
-              - entity: sensor.ds3_aaaa_dc2_power
+              - entity: sensor.ds3_aaaaa_dc2_power
                 name: DC2
-              - entity: sensor.ds3_aaaa_dc1_voltage
+              - entity: sensor.ds3_aaaaa_dc1_voltage
                 name: DC1
-              - entity: sensor.ds3_aaaa_dc2_voltage
+              - entity: sensor.ds3_aaaaa_dc2_voltage
                 name: DC2
             grid_options:
               columns: 12

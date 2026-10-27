@@ -452,10 +452,13 @@ def ecu_title(ecu_id: str | None) -> str:
     return f"{ecu_model(ecu_id)} ({ecu_id[-4:]})"
 
 
+INVERTER_SERIAL_TAIL = 5
+
+
 def inverter_name(layout: UnitLayout, layouts: list[UnitLayout]) -> str:
-    """Device name of an inverter: model and the end of its serial, e.g.
-    "QT2-3 (7556)". Unique even with several ECUs, unlike the Modbus
+    """Device name of an inverter: model and the last 5 digits of its serial,
+    e.g. "QT2-3 (17556)". Unique even with several ECUs, unlike the Modbus
     address. The whole serial when two inverters of the ECU share an end."""
-    tail = layout.serial[-4:]
-    clash = any(o is not layout and o.serial[-4:] == tail for o in layouts)
+    tail = layout.serial[-INVERTER_SERIAL_TAIL:]
+    clash = any(o is not layout and o.serial[-INVERTER_SERIAL_TAIL:] == tail for o in layouts)
     return f"{layout.model} ({layout.serial if clash else tail})"
