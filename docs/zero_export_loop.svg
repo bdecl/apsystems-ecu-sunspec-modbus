@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 400" width="920" height="400" role="img" aria-labelledby="t d">
+  <title id="t">Zero export control loop</title>
+  <desc id="d">The blueprint reads grid power, computes a new power limit, writes it through the integration to the ECU, which dispatches it to every inverter in about 20 seconds; the change in inverter output shows up in grid power at the next cycle.</desc>
+  <style>
+    .bg { fill: #ffffff; }
+    .box { fill: #f6f8fa; stroke: #d0d7de; stroke-width: 1.5; }
+    .key { fill: #fff8e1; stroke: #f2b417; stroke-width: 1.5; }
+    .title { font: 600 15px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #1f2328; }
+    .txt { font: 13px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #424a53; }
+    .mono { font: 12.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #424a53; }
+    .small { font: 12.5px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #59636e; }
+    .arrow { stroke: #59636e; stroke-width: 2; fill: none; }
+    .head { fill: #59636e; }
+    .chip { fill: #ffffff; stroke: #d0d7de; stroke-width: 1; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0d1117; }
+      .box { fill: #161b22; stroke: #3d444d; }
+      .key { fill: #2b2111; stroke: #d29922; }
+      .title { fill: #f0f6fc; }
+      .txt, .mono { fill: #d1d7e0; }
+      .small { fill: #9198a1; }
+      .arrow { stroke: #9198a1; }
+      .head { fill: #9198a1; }
+      .chip { fill: #0d1117; stroke: #3d444d; }
+    }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="head" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="920" height="400" rx="12"/>
+
+  <!-- 1. grid meter -->
+  <rect class="box" x="20" y="40" width="180" height="180" rx="10"/>
+  <text class="title" x="36" y="70">Grid meter</text>
+  <text class="txt" x="36" y="98">grid power, W</text>
+  <text class="small" x="36" y="122">any power sensor,</text>
+  <text class="small" x="36" y="140">either sign convention</text>
+
+  <!-- 2. blueprint -->
+  <rect class="key" x="240" y="40" width="250" height="180" rx="10"/>
+  <text class="title" x="256" y="70">Blueprint, every 30 s</text>
+  <text class="mono" x="256" y="98">error = target − grid</text>
+  <text class="txt" x="256" y="122">|error| ≤ deadband → keep</text>
+  <text class="mono" x="256" y="146">step = error ÷ rated × 100 %</text>
+  <text class="txt" x="256" y="170">× 0.8 cutting, × 0.15 releasing</text>
+  <text class="txt" x="256" y="194">clamped to floor … 100 %</text>
+
+  <!-- 3. integration -->
+  <rect class="box" x="530" y="40" width="170" height="180" rx="10"/>
+  <text class="title" x="546" y="70">Integration</text>
+  <text class="txt" x="546" y="98">Power limit (number)</text>
+  <text class="mono" x="546" y="122">WMaxLimPct</text>
+  <text class="mono" x="546" y="142">→ 40189</text>
+  <text class="small" x="546" y="170">sets WMaxLim_Ena</text>
+  <text class="small" x="546" y="188">if it was 0</text>
+
+  <!-- 4. ECU and inverters -->
+  <rect class="box" x="740" y="40" width="160" height="180" rx="10"/>
+  <text class="title" x="756" y="70">ECU → inverters</text>
+  <text class="txt" x="756" y="98">one limit for</text>
+  <text class="txt" x="756" y="116">the whole array</text>
+  <text class="small" x="756" y="146">Zigbee dispatch</text>
+  <text class="small" x="756" y="164">≈ 20 s</text>
+
+  <!-- forward arrows -->
+  <path class="arrow" d="M200,130 H236" marker-end="url(#a)"/>
+  <path class="arrow" d="M490,130 H526" marker-end="url(#a)"/>
+  <path class="arrow" d="M700,130 H736" marker-end="url(#a)"/>
+
+  <!-- feedback path -->
+  <path class="arrow" d="M820,220 V280 H110 V224" marker-end="url(#a)"/>
+  <text class="small" x="465" y="302" text-anchor="middle">inverter output changes grid power, measured again at the next cycle</text>
+
+  <!-- guards -->
+  <rect class="chip" x="110" y="330" width="330" height="40" rx="20"/>
+  <text class="txt" x="275" y="355" text-anchor="middle">enable entity off → limit back to 100 %</text>
+  <rect class="chip" x="480" y="330" width="330" height="40" rx="20"/>
+  <text class="txt" x="645" y="355" text-anchor="middle">grid sensor unavailable → last limit held</text>
+</svg>
