@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 400" width="920" height="400" role="img" aria-labelledby="t d">
+<title id="t">Measured response to power-limit writes</title>
+<desc id="d">AC output of nine QT2 inverters measured on the solar circuit while the power limit was written to 10, 20, 30 and back to 100 percent on 21 October 2026. Output fell from 4.5 kW to 1.5 kW within 7 seconds of the 10 percent write and rose to 2.9 kW within 8 seconds of the 20 percent write. At 30 and 100 percent the limit was above the available solar power.</desc>
+<style>
+.bg { fill: #fcfcfb; }
+.h { font: 600 15px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #0b0b0b; }
+.sub, .tick, .leg { font: 12.5px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #52514e; }
+.ann { font: 600 12.5px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #0b0b0b; }
+.note { font: italic 12px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #6b6a66; }
+.wlab { font: 600 12px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #52514e; }
+.grid { stroke: #e6e5e1; stroke-width: 1; }
+.tickmark { stroke: #b8b7b1; stroke-width: 1; }
+.write { stroke: #b8b7b1; stroke-width: 1; stroke-dasharray: 2 3; }
+.prod { stroke: #2a78d6; stroke-width: 2; fill: none; stroke-linejoin: round; }
+.lim { stroke: #eb6834; stroke-width: 2; fill: none; stroke-dasharray: 6 4; }
+.dot { fill: #2a78d6; stroke: #fcfcfb; stroke-width: 2; }
+@media (prefers-color-scheme: dark) {
+  .bg { fill: #1a1a19; }
+  .h, .ann { fill: #f0efec; }
+  .sub, .tick, .leg, .wlab { fill: #c3c2b7; }
+  .note { fill: #9b9a92; }
+  .grid { stroke: #2f2f2d; }
+  .tickmark, .write { stroke: #55544f; }
+  .prod { stroke: #3987e5; }
+  .lim { stroke: #d95926; }
+  .dot { fill: #3987e5; stroke: #1a1a19; }
+}
+</style>
+<rect class="bg" width="920" height="400" rx="12"/>
+<text class="h" x="70" y="28">The array follows the power limit within seconds</text>
+<text class="sub" x="70" y="47">ECU-C, nine QT2-3 (17.8 kW rated), limit written to WMaxLimPct, output measured on the solar circuit</text>
+<g transform="translate(606,20)">
+  <line class="prod" x1="0" x2="22" y1="5" y2="5"/><text class="leg" x="28" y="9">measured output</text>
+  <line class="lim" x1="140" x2="162" y1="5" y2="5"/><text class="leg" x="168" y="9">limit × rated power</text>
+</g>
+<line class="grid" x1="70" x2="896" y1="350.0" y2="350.0"/><text class="tick" x="62" y="354.0" text-anchor="end">0 kW</text><line class="grid" x1="70" x2="896" y1="303.3" y2="303.3"/><text class="tick" x="62" y="307.3" text-anchor="end">1 kW</text><line class="grid" x1="70" x2="896" y1="256.7" y2="256.7"/><text class="tick" x="62" y="260.7" text-anchor="end">2 kW</text><line class="grid" x1="70" x2="896" y1="210.0" y2="210.0"/><text class="tick" x="62" y="214.0" text-anchor="end">3 kW</text><line class="grid" x1="70" x2="896" y1="163.3" y2="163.3"/><text class="tick" x="62" y="167.3" text-anchor="end">4 kW</text><line class="grid" x1="70" x2="896" y1="116.7" y2="116.7"/><text class="tick" x="62" y="120.7" text-anchor="end">5 kW</text><line class="grid" x1="70" x2="896" y1="70.0" y2="70.0"/><text class="tick" x="62" y="74.0" text-anchor="end">6 kW</text><line class="tickmark" x1="199.6" x2="199.6" y1="350" y2="355"/><text class="tick" x="199.6" y="370" text-anchor="middle">15:57</text><line class="tickmark" x1="393.9" x2="393.9" y1="350" y2="355"/><text class="tick" x="393.9" y="370" text-anchor="middle">15:58</text><line class="tickmark" x1="588.3" x2="588.3" y1="350" y2="355"/><text class="tick" x="588.3" y="370" text-anchor="middle">15:59</text><line class="tickmark" x1="782.6" x2="782.6" y1="350" y2="355"/><text class="tick" x="782.6" y="370" text-anchor="middle">16:00</text>
+<line class="write" x1="381.0" x2="381.0" y1="70" y2="350"/><text class="wlab" x="385.0" y="342">10 %</text><line class="write" x1="497.4" x2="497.4" y1="70" y2="350"/><text class="wlab" x="501.4" y="342">20 %</text><line class="write" x1="589.8" x2="589.8" y1="70" y2="350"/><text class="wlab" x="593.8" y="342">30 %</text><line class="write" x1="662.4" x2="662.4" y1="70" y2="350"/><text class="wlab" x="666.4" y="342">100 %</text>
+<polyline class="lim" points="70.0,70.0 381.0,70.0 381.0,266.8 497.4,266.8 497.4,183.6 589.8,183.6 589.8,100.4 662.4,100.4 662.4,70.0 896.0,70.0"/>
+<polyline class="prod" points="96.9,127.8 148.7,135.7 171.5,158.5 187.6,214.2 203.8,229.5 226.5,216.0 242.8,212.4 256.1,223.5 275.1,186.9 297.8,152.8 314.4,143.0 330.2,142.2 378.9,139.8 402.2,278.8 453.2,278.8 505.0,279.3 524.7,214.6 576.3,214.3 609.1,234.4 624.9,248.3 641.1,253.6 657.5,257.4 680.0,258.3 731.7,259.8 747.9,266.1 767.3,273.8 786.8,264.1 806.4,256.7 825.6,251.6 867.7,247.0 890.4,245.1"/>
+<circle class="dot" cx="402.2" cy="278.8" r="4.5"/><circle class="dot" cx="524.7" cy="214.6" r="4.5"/><text class="ann" x="396.2" y="302.8" text-anchor="end">1.5 kW, 7 s after the write</text><text class="ann" x="532.7" y="202.7">2.9 kW, 8 s after</text><text class="note" x="685.5" y="149.3">30 % and 100 % are above what the</text><text class="note" x="685.5" y="165.3">panels give: clouds set the output</text><text class="note" x="892.0" y="86.0" text-anchor="end">100 % = 17.8 kW, off the scale</text>
+</svg>

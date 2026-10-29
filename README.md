@@ -121,6 +121,12 @@ loop itself: that is what the blueprint is for.
 
 ![Zero export control loop](docs/zero_export_loop.svg)
 
+![Measured response to power-limit writes](docs/limit_response.svg)
+
+A real test on the ECU-C: the limit stepped to 10, 20, 30 and back to 100 %.
+Production followed within 7 to 8 seconds; a larger step on another day took
+about 20 seconds, hence the 30-second control period.
+
 [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2Fbdecl%2Fapsystems-ecu-sunspec-modbus%2Fmain%2Fblueprints%2Fautomation%2Fapsystems_ecu_sunspec%2Fzero_export.yaml)
 
 Or, in Home Assistant: Settings, Automations & scenes, Blueprints, Import
