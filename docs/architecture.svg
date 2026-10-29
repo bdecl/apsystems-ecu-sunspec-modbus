@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" width="960" height="420" role="img" aria-labelledby="t d">
+  <title id="t">How the integration fits together</title>
+  <desc id="d">Inside Home Assistant, the integration creates one ECU device with the array totals and the global controls, and one device per inverter. It reaches the ECU over Modbus TCP on port 502 through Home Assistant's shared Modbus connection, one Modbus unit per inverter. The ECU talks to the inverters over Zigbee. The zero export blueprint reads a grid meter and writes the power limit.</desc>
+  <style>
+    .bg { fill: #ffffff; }
+    .ha { fill: #eef6fc; stroke: #18bcf2; stroke-width: 1.5; }
+    .grp { fill: #ffffff; stroke: #9cd8f2; stroke-width: 1.2; stroke-dasharray: 5 4; }
+    .box { fill: #f6f8fa; stroke: #d0d7de; stroke-width: 1.5; }
+    .key { fill: #fff8e1; stroke: #f2b417; stroke-width: 1.5; }
+    .dev { fill: #f3f0ff; stroke: #8b7bd8; stroke-width: 1.5; }
+    .h1 { font: 700 16px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #0b6a92; }
+    .title { font: 600 14.5px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #1f2328; }
+    .txt { font: 13px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #424a53; }
+    .ctl { font: 600 13px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #9a6700; }
+    .mono { font: 12.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #424a53; }
+    .small { font: 12.5px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #59636e; }
+    .arrow { stroke: #59636e; stroke-width: 2; fill: none; }
+    .head { fill: #59636e; }
+    .zig { stroke: #8b7bd8; stroke-width: 2; fill: none; stroke-dasharray: 6 4; }
+    .zhead { fill: #8b7bd8; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0d1117; }
+      .ha { fill: #0f2433; stroke: #18bcf2; }
+      .grp { fill: #0d1117; stroke: #1f6f8f; }
+      .box { fill: #161b22; stroke: #3d444d; }
+      .key { fill: #2b2111; stroke: #d29922; }
+      .dev { fill: #1d1a33; stroke: #8b7bd8; }
+      .h1 { fill: #6fd3f7; }
+      .title { fill: #f0f6fc; }
+      .txt, .mono { fill: #d1d7e0; }
+      .ctl { fill: #e3b341; }
+      .small { fill: #9198a1; }
+      .arrow { stroke: #9198a1; }
+      .head { fill: #9198a1; }
+    }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="head" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+    <marker id="z" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="zhead" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="960" height="420" rx="12"/>
+
+  <!-- Home Assistant -->
+  <rect class="ha" x="16" y="16" width="452" height="388" rx="12"/>
+  <text class="h1" x="32" y="42">Home Assistant</text>
+
+  <rect class="grp" x="28" y="54" width="428" height="196" rx="10"/>
+  <text class="mono" x="42" y="74">apsystems_ecu_sunspec</text>
+
+  <rect class="box" x="40" y="84" width="196" height="154" rx="8"/>
+  <text class="title" x="52" y="106">ECU device</text>
+  <text class="txt" x="52" y="128">total power and energy</text>
+  <text class="txt" x="52" y="146">inverters online, events</text>
+  <text class="ctl" x="52" y="174">Power limit</text>
+  <text class="ctl" x="52" y="192">Production on / off</text>
+  <text class="small" x="52" y="214">controls act on the</text>
+  <text class="small" x="52" y="230">whole array</text>
+
+  <rect class="box" x="248" y="84" width="196" height="154" rx="8"/>
+  <text class="title" x="260" y="106">Inverter device × N</text>
+  <text class="txt" x="260" y="128">AC power, V, A per phase</text>
+  <text class="txt" x="260" y="146">frequency, temperature</text>
+  <text class="txt" x="260" y="164">state, events, energy</text>
+  <text class="txt" x="260" y="182">DC V, A, W per panel</text>
+  <text class="small" x="260" y="210">only what the firmware</text>
+  <text class="small" x="260" y="226">actually implements</text>
+
+  <rect class="key" x="28" y="272" width="208" height="118" rx="10"/>
+  <text class="title" x="42" y="296">Zero export blueprint</text>
+  <text class="txt" x="42" y="318">reads a grid meter</text>
+  <text class="txt" x="42" y="336">writes the power limit</text>
+  <text class="small" x="42" y="362">optional, every 30 s</text>
+
+  <rect class="box" x="248" y="272" width="208" height="118" rx="10"/>
+  <text class="title" x="262" y="296">Shared Modbus link</text>
+  <text class="txt" x="262" y="318">HA's modbus integration</text>
+  <text class="txt" x="262" y="336">one socket per host:port,</text>
+  <text class="txt" x="262" y="354">requests queued</text>
+
+  <!-- blueprint to power limit -->
+  <path class="arrow" d="M120,272 V244" marker-end="url(#a)"/>
+  <!-- integration to shared link -->
+  <path class="arrow" d="M352,250 V268" marker-end="url(#a)"/>
+
+  <!-- Modbus TCP to ECU -->
+  <path class="arrow" d="M456,331 H570" marker-end="url(#a)"/>
+  <path class="arrow" d="M570,345 H460" marker-end="url(#a)"/>
+  <text class="small" x="514" y="300" text-anchor="middle">Modbus TCP</text>
+  <text class="small" x="514" y="316" text-anchor="middle">port 502</text>
+  <text class="small" x="514" y="366" text-anchor="middle">unit n =</text>
+  <text class="small" x="514" y="382" text-anchor="middle">inverter n</text>
+
+  <!-- ECU -->
+  <rect class="box" x="574" y="40" width="170" height="350" rx="10"/>
+  <text class="title" x="588" y="66">APsystems ECU</text>
+  <text class="txt" x="588" y="90">SunSpec server</text>
+  <text class="mono" xml:space="preserve" x="588" y="120">1    identity</text>
+  <text class="mono" xml:space="preserve" x="588" y="140">103  inverter, int</text>
+  <text class="mono" xml:space="preserve" x="588" y="160">113  inverter, float</text>
+  <text class="mono" xml:space="preserve" x="588" y="180">123  controls</text>
+  <text class="mono" xml:space="preserve" x="588" y="200">114  DC, after the</text>
+  <text class="mono" xml:space="preserve" x="588" y="218">     end marker</text>
+  <text class="small" x="588" y="250">no meter, and no</text>
+  <text class="small" x="588" y="266">unit for the ECU</text>
+  <text class="small" x="588" y="282">itself</text>
+
+  <!-- Zigbee -->
+  <path class="zig" d="M744,105 H788" marker-end="url(#z)"/>
+  <path class="zig" d="M744,215 H788" marker-end="url(#z)"/>
+  <path class="zig" d="M744,325 H788" marker-end="url(#z)"/>
+
+  <!-- inverters -->
+  <rect class="dev" x="792" y="62" width="152" height="86" rx="8"/>
+  <text class="title" x="806" y="88">Inverter 1</text>
+  <text class="txt" x="806" y="110">QT2, DS3, QS1…</text>
+  <text class="small" x="806" y="132">2 or 4 panels</text>
+
+  <rect class="dev" x="792" y="172" width="152" height="86" rx="8"/>
+  <text class="title" x="806" y="198">Inverter 2</text>
+  <text class="txt" x="806" y="220">one Modbus unit</text>
+  <text class="small" x="806" y="242">each</text>
+
+  <rect class="dev" x="792" y="282" width="152" height="86" rx="8"/>
+  <text class="title" x="806" y="308">Inverter N</text>
+  <text class="txt" x="806" y="330">address set</text>
+  <text class="small" x="806" y="352">in EMA</text>
+  <text class="small" x="868" y="394" text-anchor="middle">Zigbee, ≈ 20 s per command</text>
+</svg>
