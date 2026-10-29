@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="custom_components/apsystems_ecu_sunspec/brand/dark_logo@2x.png">
+    <img alt="APS ECU — SunSpec, local Modbus TCP" src="custom_components/apsystems_ecu_sunspec/brand/logo@2x.png" width="480">
+  </picture>
+</p>
+
 # apsystems-ecu-sunspec-modbus
 
 [![GitHub release](https://img.shields.io/github/v/release/bdecl/apsystems-ecu-sunspec-modbus)](https://github.com/bdecl/apsystems-ecu-sunspec-modbus/releases)
