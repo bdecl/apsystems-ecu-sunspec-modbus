@@ -75,7 +75,7 @@ exception. The gateway does not signal invalid requests.
 | 40091 | VAr_SF | sf | -1 | yes |
 | 40092 | PF | s16 | 1000 | yes |
 | 40093 | PF_SF | sf | -3 | yes |
-| 40094–40095 | WH | acc32 | 2114 | yes |
+| 40094–40095 | WH | acc32 | 2114 | yes, energy of the current day |
 | 40096 | WH_SF | sf | 0 | yes |
 | 40097 | DCA | u16 | 65535 | no |
 | 40098 | DCA_SF | sf | -32768 | no |
@@ -116,7 +116,7 @@ exception. The gateway does not signal invalid requests.
 | 40148–40149 | VA | f32 | 0.95 | yes |
 | 40150–40151 | VAr | f32 | 0.0 | yes |
 | 40152–40153 | PF | f32 | 1.0 | yes |
-| 40154–40155 | WH | f32 | 2114.685 | yes |
+| 40154–40155 | WH | f32 | 2114.685 | yes, energy of the current day |
 | 40156–40157 | DCA | f32 | NaN | no |
 | 40158–40159 | DCV | f32 | NaN | no |
 | 40160–40161 | DCW | f32 | NaN | no |

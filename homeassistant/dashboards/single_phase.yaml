@@ -34,8 +34,8 @@ views:
             grid_options:
               columns: 12
           - type: tile
-            entity: sensor.apsystems_ecu_energy
-            name: Lifetime energy
+            entity: sensor.apsystems_ecu_energy_today
+            name: Energy today
           - type: tile
             entity: sensor.apsystems_ecu_inverters_producing
             name: Inverters producing
@@ -94,7 +94,7 @@ views:
             stat_types:
               - change
             entities:
-              - entity: sensor.apsystems_ecu_energy
+              - entity: sensor.apsystems_ecu_energy_today
                 name: Energy
             grid_options:
               columns: 12

@@ -103,8 +103,13 @@ unique with several ECUs and do not depend on the Modbus addresses set in EMA.
 
 | Device | Entities |
 |---|---|
-| APsystems ECU | Total AC power, total energy, total DC power, inverters producing and online, active events, **power limit** (number), **production** and **power limit enabled** (switches) |
-| APsystems inverter *n* | AC power, current and voltages per phase, frequency, energy, temperature, operating state, events, DC voltage, current and power per channel |
+| APsystems ECU | Total AC power, energy produced today, total DC power, inverters producing and online, active events, **power limit** (number), **production** and **power limit enabled** (switches) |
+| APsystems inverter *n* | AC power, current and voltages per phase, frequency, energy produced today, temperature, operating state, events, DC voltage, current and power per channel |
+
+The ECU's energy register (`WH`) counts what each inverter produced **today**
+and starts again from zero every day; it is not a lifetime total. The *Energy
+today* sensors follow it, and Home Assistant's statistics and Energy dashboard
+handle the daily reset on their own.
 
 Points the firmware does not implement are not created. Each inverter is read
 from the integer model (it carries state and events, and its energy counter keeps

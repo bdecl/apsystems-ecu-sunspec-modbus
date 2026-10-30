@@ -75,7 +75,7 @@ COMMON = (
         key="frequency", name="Frequency", device_class=SensorDeviceClass.FREQUENCY,
         state_class=MEAS, native_unit_of_measurement=UnitOfFrequency.HERTZ,
         suggested_display_precision=2),
-    _wh("energy", "Energy"),
+    _wh("energy", "Energy today"),
     EcuSensorDescription(
         key="temperature", name="Temperature", device_class=SensorDeviceClass.TEMPERATURE,
         state_class=MEAS, native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -139,7 +139,7 @@ def dc_descriptions(channels: int) -> list[EcuSensorDescription]:
 
 ECU_SENSORS = (
     _w("power", "Power", always=True),
-    _wh("energy", "Energy", always=True),
+    _wh("energy", "Energy today", always=True),
     EcuSensorDescription(
         key="inverters_producing", name="Inverters producing", state_class=MEAS, always=True),
     EcuSensorDescription(

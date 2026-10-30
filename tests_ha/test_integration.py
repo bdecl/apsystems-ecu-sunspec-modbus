@@ -65,7 +65,7 @@ async def test_three_phase_array(hass: HomeAssistant, ecu_factory):
     assert entry.unique_id == "ecu_9015000X0001"
 
     assert float(_state(hass, "sensor.apsystems_ecu_power")) == 4000
-    assert float(_state(hass, "sensor.apsystems_ecu_energy")) == pytest.approx(3.114)  # kWh
+    assert float(_state(hass, "sensor.apsystems_ecu_energy_today")) == pytest.approx(3.114)  # kWh
     assert _state(hass, "sensor.apsystems_ecu_inverters_producing") == "2"
     assert float(_state(hass, "sensor.apsystems_ecu_dc_power_total")) == pytest.approx(2 * 186)
     assert float(_state(hass, "sensor.qt2_3_x0001_power")) == 2100
@@ -244,7 +244,7 @@ async def test_frozen_data_counts_as_asleep(hass: HomeAssistant, ecu_factory):
     assert _state(hass, "sensor.apsystems_ecu_inverters_producing") == "0"
     assert float(_state(hass, "sensor.apsystems_ecu_power")) == 0
     assert float(_state(hass, "sensor.apsystems_ecu_dc_power_total")) == 0
-    assert float(_state(hass, "sensor.apsystems_ecu_energy")) == pytest.approx(2 * 2.114)
+    assert float(_state(hass, "sensor.apsystems_ecu_energy_today")) == pytest.approx(2 * 2.114)
     assert _state(hass, "sensor.qt2_3_x0001_operating_state") == "sleeping"
     assert float(_state(hass, "sensor.qt2_3_x0001_power")) == 0
     assert _state(hass, "sensor.qt2_3_x0001_voltage_l1_l2") == "unknown"
