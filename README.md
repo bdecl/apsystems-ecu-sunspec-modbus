@@ -146,6 +146,8 @@ to the inverters takes about 20 s.
 
 ### Dashboards
 
+![Example dashboard, three-phase](docs/dashboard.png)
+
 [homeassistant/dashboards/](homeassistant/dashboards/) has a three-phase and a
 single-phase dashboard built from native cards only. Paste one into a dashboard's
 raw configuration editor and copy the per-inverter blocks for each of your

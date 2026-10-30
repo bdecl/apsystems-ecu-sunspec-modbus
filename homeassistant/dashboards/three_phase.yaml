@@ -7,7 +7,7 @@
 # Entity ids assume the default device names: "APsystems ECU" (no ECU ID
 # entered) and "<model> (<last 5 digits of the serial>)" for the inverters.
 # Replace "qt2_3_aaaaa_" and "qt2_3_bbbbb_" with the start of your inverters'
-# entity ids (e.g. "qt2_3_17556_"), and "apsystems_ecu_" if you entered an
+# entity ids (e.g. "qt2_3_12345_"), and "apsystems_ecu_" if you entered an
 # ECU ID (e.g. "ecu_c_1234_").
 #
 # The per-inverter part lists two inverters: copy the blocks marked

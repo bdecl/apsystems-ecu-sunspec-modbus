@@ -457,7 +457,7 @@ INVERTER_SERIAL_TAIL = 5
 
 def inverter_name(layout: UnitLayout, layouts: list[UnitLayout]) -> str:
     """Device name of an inverter: model and the last 5 digits of its serial,
-    e.g. "QT2-3 (17556)". Unique even with several ECUs, unlike the Modbus
+    e.g. "QT2-3 (12345)". Unique even with several ECUs, unlike the Modbus
     address. The whole serial when two inverters of the ECU share an end."""
     tail = layout.serial[-INVERTER_SERIAL_TAIL:]
     clash = any(o is not layout and o.serial[-INVERTER_SERIAL_TAIL:] == tail for o in layouts)
