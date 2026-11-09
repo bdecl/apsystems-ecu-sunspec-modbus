@@ -1,3 +1,4 @@
+import importlib.util
 import pathlib
 import sys
 
@@ -6,7 +7,17 @@ import pytest_socket
 
 sys.path.insert(0, str(pathlib.Path(__file__).parents[1] / "tests"))
 
-pytest_plugins = ["pytest_homeassistant_custom_component"]
+# Home Assistant 2026.11 and newer: pytest-homeassistant, published by Home
+# Assistant core, loads itself. Home Assistant 2026.10 only exists for the
+# retired pytest-homeassistant-custom-component, which must be named here.
+if importlib.util.find_spec("pytest_homeassistant") is None:
+    pytest_plugins = ["pytest_homeassistant_custom_component"]
+else:
+    # Its default configuration directory is tests/testing_config in the
+    # repository, where Home Assistant would write its default blueprints.
+    @pytest.fixture
+    def hass_config_dir(hass_tmp_config_dir):
+        return hass_tmp_config_dir
 
 
 @pytest.fixture(autouse=True)
