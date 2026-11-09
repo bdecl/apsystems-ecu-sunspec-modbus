@@ -4,6 +4,10 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+  # Every Monday, so a new Home Assistant release or beta is tested without
+  # waiting for the next push.
+  schedule:
+    - cron: "17 5 * * 1"
 
 jobs:
   hassfest:
@@ -31,15 +35,36 @@ jobs:
       - run: pytest -q -p no:cacheprovider tests
 
   tests-ha:
+    name: tests-ha (${{ matrix.ha }})
     runs-on: ubuntu-latest
+    # A failing beta is a warning about the next release, not a broken build.
+    continue-on-error: ${{ matrix.ha == 'beta' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        ha: [oldest, stable, beta]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.14"
-      # Oldest supported Home Assistant (2026.10.0) and the requirements of its
-      # modbus integration, which the test harness does not install by itself.
-      - run: >-
-          pip install pytest-homeassistant-custom-component==0.13.371
-          "modbus-connection[tmodbus]==4.12.3" tmodbus==0.6.2 pymodbus==3.13.1
+      - name: Install Home Assistant and its test package
+        run: |
+          case "${{ matrix.ha }}" in
+            # Oldest supported release (hacs.json). Only the retired
+            # pytest-homeassistant-custom-component exists for it.
+            oldest) pip install pytest-homeassistant-custom-component==0.13.371 ;;
+            # From 2026.11, Home Assistant core publishes the test package,
+            # versioned like Home Assistant itself.
+            stable) pip install pytest-homeassistant ;;
+            beta)   pip install --pre pytest-homeassistant ;;
+          esac
+      # The test packages do not install integration requirements: take them
+      # from the installed Home Assistant, so each release gets its own versions.
+      - name: Install the requirements of Home Assistant's modbus integration
+        run: |
+          python .github/scripts/modbus_requirements.py > modbus-requirements.txt
+          cat modbus-requirements.txt
+          pip install -r modbus-requirements.txt
+      - run: python -c "import homeassistant.const as c; print('Home Assistant', c.__version__)"
       - run: cd tests_ha && pytest -q --rootdir=. .
