@@ -1,6 +1,7 @@
 {
   "domain": "apsystems_ecu_sunspec",
   "name": "APsystems ECU SunSpec (Modbus)",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@bdecl"],
   "config_flow": true,
   "dependencies": ["modbus"],
