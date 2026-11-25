@@ -3,6 +3,11 @@
 Full register-by-register dump of an APsystems ECU's SunSpec map.
 
 Usage:  python3 sunspec_dump.py 192.168.1.131 1 > ecu_map.md
+        python3 sunspec_dump.py 192.168.1.131 1 --show-serial
+
+The inverter serial number (model 1, SN) is hidden by default, apart from its
+first 4 characters, which tell the inverter family: the output can go to a
+public issue as it is. --show-serial prints it in full.
 
 Reads every register of models 1, 103, 113 and 123, decodes each field
 according to the SunSpec specification, and flags the ones the firmware
@@ -130,6 +135,17 @@ WIDTH = {"u16": 1, "s16": 1, "sf": 1, "enum": 1, "bf32": 2, "acc32": 2,
          "f32": 2, "str8": 8, "str16": 16}
 
 
+SHOW_SERIAL = False
+
+
+def hide_serial(value):
+    """Keep the first 4 characters of a serial, hide the rest."""
+    text = str(value).strip("'")
+    if SHOW_SERIAL or text == "(empty)":
+        return value
+    return repr(text[:4] + "x" * max(len(text) - 4, 0))
+
+
 def dump_model(client, unit, model_id, data_start, fields, out):
     out.append(f"\n### Model {model_id} — data {data_start}..{data_start + sum(WIDTH[f[2]] for f in fields) - 1}\n")
     out.append("| Register | Field | Type | Value | Implemented |")
@@ -142,13 +158,18 @@ def dump_model(client, unit, model_id, data_start, fields, out):
             out.append(f"| {addr} | {name} | {kind} | read error | — |")
             continue
         value, ok = decode(kind, regs)
+        if name == "SN":
+            value = hide_serial(value)
         span = f"{addr}" if n == 1 else f"{addr}–{addr + n - 1}"
         out.append(f"| {span} | {name} | {kind} | {value} | {'yes' if ok else 'no'} |")
 
 
 def main():
-    host = sys.argv[1] if len(sys.argv) > 1 else "192.168.1.131"
-    unit = int(sys.argv[2]) if len(sys.argv) > 2 else 1
+    global SHOW_SERIAL
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    SHOW_SERIAL = "--show-serial" in sys.argv[1:]
+    host = args[0] if args else "192.168.1.131"
+    unit = int(args[1]) if len(args) > 1 else 1
 
     client = ModbusTcpClient(host, port=502, timeout=5)
     if not client.connect():

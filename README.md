@@ -65,8 +65,10 @@ Zigbee, which takes about 20 seconds.
 | [bolkedebruin/apsystems-sunspec](https://github.com/bolkedebruin/apsystems-sunspec) adapter (port 1502) | ❌ Not yet | Detected and refused with a clear message |
 | Home Assistant | 2026.10 or newer | Needed for the shared Modbus connection |
 
-If you run it on hardware marked ⚠️, an issue saying whether it works, with the
-integration's diagnostics attached, is very welcome.
+If you run it on hardware marked ⚠️, a
+[hardware report](https://github.com/bdecl/apsystems-ecu-sunspec-modbus/issues/new?template=hardware_report.yml)
+saying whether it works, with the integration's diagnostics attached, is very
+welcome.
 
 ## Home Assistant integration
 
@@ -203,6 +205,25 @@ the integration has seen that they do not move.
   the register map. Reports from other ECUs and inverters are welcome.
 
 ## FAQ and troubleshooting
+
+To report a problem, use the
+[problem report](https://github.com/bdecl/apsystems-ecu-sunspec-modbus/issues/new?template=bug_report.yml)
+form and attach the diagnostics (*Settings → Devices & services → APsystems ECU
+SunSpec (Modbus) → ⋮ → Download diagnostics*). They contain the layout detected
+for each inverter and the raw registers read, with the ECU ID, the IP address
+and the inverter serials hidden (only the first 4 characters of each serial,
+which tell the inverter family, stay visible). If setup fails,
+`scripts/sunspec_dump.py` produces a full register dump, serial hidden too.
+
+<details>
+<summary><b>The power limit shows 30 % after a restart</b></summary>
+
+After a restart of the ECU or of an inverter, and in the morning before the
+first data round, the ECU reads back 30 % as power limit. It is a default value
+that is not applied: the inverters start at 100 %. Write the limit once (or let
+an automation do it) and the keepalive holds it from then on.
+
+</details>
 
 <details>
 <summary><b>The power limit does nothing</b></summary>

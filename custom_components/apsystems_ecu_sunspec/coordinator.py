@@ -44,6 +44,8 @@ class EcuCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._unsub_keepalive = None
         # Units on which long merged reads failed: polled one model per read.
         self.split_reads: set[int] = set()
+        # Last registers read per unit (address -> word), for the diagnostics.
+        self.last_words: dict[int, dict[int, int]] = {}
         # Per unit: last measurement registers, when they last changed (monotonic
         # clock, for the decision) and the same moment as a date (shown).
         self._fingerprints: dict[int, tuple[int, ...]] = {}
@@ -67,6 +69,7 @@ class EcuCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 errors.append(str(err))
                 units[layout.unit] = None
                 continue
+            self.last_words[layout.unit] = words
             units[layout.unit] = self._freshness(layout, words, decode_unit(layout, words, ctrl))
         if all(v is None for v in units.values()):
             raise UpdateFailed(f"No answer from the ECU at {self.hub.host}:{self.hub.port}: {errors[0]}")
