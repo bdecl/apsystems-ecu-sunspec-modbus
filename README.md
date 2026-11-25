@@ -8,7 +8,7 @@
 # apsystems-ecu-sunspec-modbus
 
 [![GitHub release](https://img.shields.io/github/v/release/bdecl/apsystems-ecu-sunspec-modbus)](https://github.com/bdecl/apsystems-ecu-sunspec-modbus/releases)
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz)
+[![HACS Default](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://hacs.xyz/)
 [![Validate](https://github.com/bdecl/apsystems-ecu-sunspec-modbus/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/bdecl/apsystems-ecu-sunspec-modbus/actions/workflows/validate.yml)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2026.10%2B-18BCF2?logo=homeassistant&logoColor=white)](https://www.home-assistant.io)
 [![Installs](https://img.shields.io/badge/dynamic/json?color=41BDF5&logo=home-assistant&label=installs&cacheSeconds=15600&url=https://analytics.home-assistant.io/custom_integrations.json&query=$.apsystems_ecu_sunspec.total)](https://analytics.home-assistant.io/)
@@ -26,7 +26,9 @@ published here too, with the scripts used to obtain it.
 
 1. **On the ECU**, in EMA Manager: ECU app, Workspace, *Modbus Configuration*. Set
    *Switch* to On and give every inverter a Modbus address.
-2. **Install** through HACS, then restart Home Assistant (2026.10 or newer).
+2. **Install**: search for **APsystems ECU SunSpec (Modbus)** in the Marketplace
+   (*HACS* on Home Assistant before 2026.11), install it, then restart Home
+   Assistant (2026.10 or newer).
 
    [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=bdecl&repository=apsystems-ecu-sunspec-modbus&category=integration)
 3. **Add the integration** and enter the ECU's IP address. It scans the inverters
@@ -70,8 +72,12 @@ integration's diagnostics attached, is very welcome.
 
 ### Install
 
-HACS, three dots, Custom repositories, add this repository as an *Integration*,
-then install **APsystems ECU SunSpec (Modbus)** and restart Home Assistant. Or copy
+The integration is in the default list of the Marketplace (*HACS* on Home
+Assistant before 2026.11): search for **APsystems ECU SunSpec (Modbus)**, install
+it and restart Home Assistant.
+
+If it does not show up, add `https://github.com/bdecl/apsystems-ecu-sunspec-modbus`
+as a custom repository of type *Integration* and install it from there, or copy
 `custom_components/apsystems_ecu_sunspec` into your configuration folder.
 
 Home Assistant 2026.10 or newer is required. The integration takes its Modbus
@@ -345,7 +351,7 @@ is the point of this repository.
 | [scripts/sunspec_walk.py](scripts/sunspec_walk.py) | Walks the model chain and prints what the ECU exposes. Start here |
 | [scripts/sunspec_dump.py](scripts/sunspec_dump.py) | Full register-by-register dump, emits a markdown table |
 | [scripts/ecu_probe.py](scripts/ecu_probe.py) | Scans unit ids and sweeps the address space for undocumented content |
-| [custom_components/apsystems_ecu_sunspec](custom_components/apsystems_ecu_sunspec) | Home Assistant integration, installable through HACS |
+| [custom_components/apsystems_ecu_sunspec](custom_components/apsystems_ecu_sunspec) | Home Assistant integration, in the default list of the Marketplace (HACS) |
 | [blueprints/automation/apsystems_ecu_sunspec/zero_export.yaml](blueprints/automation/apsystems_ecu_sunspec/zero_export.yaml) | Zero export blueprint for the integration |
 | [homeassistant/dashboards/](homeassistant/dashboards/) | Ready-made dashboards, three-phase and single-phase |
 | [homeassistant/modbus.yaml](homeassistant/modbus.yaml) | YAML alternative: Modbus hub and sensors, documented and ready to adapt |
