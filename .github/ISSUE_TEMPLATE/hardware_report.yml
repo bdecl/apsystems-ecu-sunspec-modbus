@@ -1,0 +1,59 @@
+name: Hardware report
+description: Tell whether the integration works on an ECU or inverter model not marked as tested.
+labels: [hardware report]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Reports on hardware marked ⚠️ in the README are very welcome, also when everything works.
+        Attach the diagnostics (*Settings → Devices & services → APsystems ECU SunSpec (Modbus) → ⋮ →
+        Download diagnostics*), downloaded while the inverters produce. It hides the ECU ID, the IP
+        address and the inverter serials.
+
+        If the integration cannot be set up at all, run
+        [`scripts/sunspec_dump.py`](https://github.com/bdecl/apsystems-ecu-sunspec-modbus/blob/main/scripts/sunspec_dump.py)
+        instead (`python3 sunspec_dump.py <ECU IP> <inverter address> > dump.md`) and attach its output.
+        It hides the inverter serial too.
+  - type: input
+    id: ecu
+    attributes:
+      label: ECU model and firmware
+      placeholder: ECU-R, 2.1.29
+    validations:
+      required: true
+  - type: input
+    id: inverters
+    attributes:
+      label: Inverters
+      placeholder: 4 x DS3-L, addresses 1 to 4
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: Result
+      options:
+        - Everything works
+        - Works, but some values are wrong or missing
+        - Setup fails
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Which values are wrong or missing, compared with EMA. Does the power limit work?
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics or register dump
+      description: Drag the file here.
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy
+      options:
+        - label: I checked that this report contains no full ECU ID, inverter serial number or public IP address.
+          required: true

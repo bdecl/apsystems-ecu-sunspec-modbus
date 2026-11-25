@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: README and known ECU behaviour
+    url: https://github.com/bdecl/apsystems-ecu-sunspec-modbus#readme
+    about: Setup, compatibility table and the known quirks of the ECU firmware (limit keepalive, night data, 30 % shown after a restart).

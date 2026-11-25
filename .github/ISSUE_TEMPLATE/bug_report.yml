@@ -1,0 +1,63 @@
+name: Problem report
+description: Something does not work as expected with the integration or the register map.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report. The diagnostics file is what makes a problem solvable:
+        *Settings → Devices & services → APsystems ECU SunSpec (Modbus) → ⋮ → Download diagnostics*.
+        It hides the ECU ID, the IP address and the inverter serials (only their first 4 characters,
+        which tell the inverter family, stay visible).
+
+        **Never post a full ECU ID or inverter serial number in an issue.**
+  - type: input
+    id: ecu
+    attributes:
+      label: ECU model and firmware
+      description: As shown in EMA Manager (Local Access).
+      placeholder: ECU-C, 1.2.27A
+    validations:
+      required: true
+  - type: input
+    id: inverters
+    attributes:
+      label: Inverters
+      description: Model and number of inverters, and the Modbus addresses given to them in EMA Manager.
+      placeholder: 9 x QT2, addresses 1 to 9
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Home Assistant and integration versions
+      placeholder: Home Assistant 2026.11.2, integration 0.2.2
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens, and what you expected
+      description: Which entity or value is wrong, since when, and what EMA shows at the same moment.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: Drag the diagnostics file here. Download it while the inverters produce, unless the problem is at night.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log lines (optional)
+      description: Lines mentioning `apsystems_ecu_sunspec` or `modbus` from *Settings → System → Logs*.
+      render: text
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy
+      options:
+        - label: I checked that this report contains no full ECU ID, inverter serial number or public IP address.
+          required: true

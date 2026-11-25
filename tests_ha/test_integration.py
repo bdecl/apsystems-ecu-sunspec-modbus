@@ -173,6 +173,10 @@ async def test_options_and_diagnostics(hass: HomeAssistant, ecu_factory):
     diag = await async_get_config_entry_diagnostics(hass, entry)
     assert "9015000X0001" not in str(diag)
     assert "127.0.0.1" not in str(diag)
+    # Layout and raw registers for reports; only the serial prefix shows
+    assert diag["units"][0]["serial_prefix"] == "9015"
+    assert diag["units"][0]["model"]
+    assert diag["raw_registers"][1]
 
     r = await hass.config_entries.options.async_init(entry.entry_id)
     r = await hass.config_entries.options.async_configure(
